@@ -1,7 +1,7 @@
 {
   "name": "gitlab-cli",
   "version": "0.1.0",
-  "description": "",
+  "description": "GitLab command line viewer program",
   "main": "main.js",
   "bin": {
     "gitlab-cli": "./build/main.js"
@@ -14,7 +14,7 @@
     "scripts": "build/**/*.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "André Luiz Clinio (andre.clinio@gmail.com)",
   "license": "ISC",
   "devDependencies": {
     "@types/axios": "^0.14.0",
