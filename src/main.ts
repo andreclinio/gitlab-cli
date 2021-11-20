@@ -8,18 +8,18 @@ import { Logger } from './logger';
 const PID_TAG = 'project-id';
 const MID_TAG = 'milestone-id';
 
-function getPidValue(logger: Logger, x: yargs.Arguments): number {
-  const projectId = x[PID_TAG] as number;
-  logger.log(`project id: ${projectId}`);
-  return projectId;
-}
-
 function getPidArgs(): string {
   return `--${PID_TAG} <${PID_TAG}>`;
 }
 
 function getMidArgs(): string {
   return `--${MID_TAG} <${MID_TAG}>`;
+}
+
+function getPidValue(logger: Logger, x: yargs.Arguments): number {
+  const projectId = x[PID_TAG] as number;
+  logger.log(`project id: ${projectId}`);
+  return projectId;
 }
 
 function getMidValue(logger: Logger, x: yargs.Arguments): number {
@@ -29,15 +29,11 @@ function getMidValue(logger: Logger, x: yargs.Arguments): number {
 }
 
 function addPidOption(x: yargs.Argv): yargs.Argv {
-  return x.option(PID_TAG, { type: 'number', alias: 'pid', demandOption: true });
+  return x.option(PID_TAG, { type: 'number', alias: 'pid', demandOption: true, description: "Set the project id" });
 }
 
 function addMidOption(x: yargs.Argv): yargs.Argv {
-  return x.option(MID_TAG, { type: 'number', alias: 'mid', demandOption: true });
-}
-
-function isOpened(text: string): boolean {
-  return text.trim().toLowerCase() === "opened";
+  return x.option(MID_TAG, { type: 'number', alias: 'mid', demandOption: true, description: "Set the milestone id" });
 }
 
 function getIssueStateText(issue: Issue): string {
