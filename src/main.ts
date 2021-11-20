@@ -2,7 +2,7 @@
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { HttpClient } from './http-client';
+import { HttpClient, Issue, Milestone } from './http-client';
 import { Logger } from './logger';
 
 const PID_TAG = 'project-id';
@@ -36,13 +36,21 @@ function addMidOption(x: yargs.Argv): yargs.Argv {
   return x.option(MID_TAG, { type: 'number', alias: 'mid', demandOption: true });
 }
 
-function isOpened(text: string) : boolean {
+function isOpened(text: string): boolean {
   return text.trim().toLowerCase() === "opened";
 }
 
-function getStateText(state: string) : string {
-  const opened = isOpened(state);
-  const stateStr = opened ? `${Logger.RED}${state}${Logger.RESET}` : state;
+function getIssueStateText(issue: Issue): string {
+  const state = issue.state;
+  const opened = issue.state.trim().toLowerCase() === "opened";
+  const stateStr = opened ? Logger.toRed(state) : state;
+  return stateStr;
+}
+
+function getMilestoneStateText(milestone: Milestone): string {
+  const state = milestone.state;
+  const active = milestone.state.trim().toLowerCase() === "active";
+  const stateStr = active ? Logger.toYellow(state) : state;
   return stateStr;
 }
 
@@ -82,8 +90,7 @@ const argv = yargs(hideBin(process.argv))
       const issues$ = httpClient.getMilestoneIssues(projectId, milestoneId);
       issues$.subscribe(issues => {
         issues.forEach(i => {
-          const stateStr = getStateText(i.state);
-          logger.printItem(`[#${i.id}] (${stateStr}) - ${i.title} `)
+          logger.printItem(`[#${i.id}] (${getIssueStateText(i)}) - ${i.title} `)
         });
       });
     })
@@ -103,14 +110,16 @@ const argv = yargs(hideBin(process.argv))
   .command(`milestones`, "see project milestones",
     (yargs) => {
       addPidOption(yargs);
+      yargs.option({ 'only-active': { default: false, demandOption: false, type: 'boolean', description: "Show only active milestones" } });
     },
     (argv) => {
       const logger = new Logger(argv.verbose);
       const projectId = getPidValue(logger, argv);
       const httpClient = new HttpClient(logger, argv.url, argv.token);
-      const milestones$ = httpClient.getMilestones(projectId);
+      const onlyActive = argv['only-active'] ? true : false;
+      const milestones$ = httpClient.getMilestones(projectId, onlyActive);
       milestones$.subscribe(milestones => {
-        milestones.forEach(m => logger.printItem(`[id:${m.id}] : ${m.title} - ${m.state}`));
+        milestones.forEach(m => logger.printItem(`[id:${m.id}] (${getMilestoneStateText(m)}) - ${m.title}`));
       });
     })
 

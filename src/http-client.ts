@@ -2,14 +2,14 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { from, map, Observable } from 'rxjs';
 import { Logger } from './logger';
 
-interface Issue {
+export interface Issue {
     id: number,
     iid: number,
     title: string,
     state: string
 }
 
-interface Project {
+export interface Project {
     id: number,
     name: string,
     path_with_namespace: string,
@@ -18,7 +18,7 @@ interface Project {
     http_url_to_repo: string
 }
 
-interface Milestone {
+export interface Milestone {
     id: number,
     iid: number,
     title: string,
@@ -65,11 +65,12 @@ export class HttpClient {
         return issues$;
     }
 
-    public getMilestones(projectId: number): Observable<Milestone[]> {
+    public getMilestones(projectId: number, onlyActive: boolean): Observable<Milestone[]> {
         const path = `/projects/${projectId}/milestones?per_page=100`;
         const data$ = from(this.mountGetRequest<Milestone[]>(path));
-        const milestones$ = data$.pipe(map((issues) => issues.data));
-        return milestones$;
+        const all$ = data$.pipe(map((issues) => issues.data));
+        const milestones$ = onlyActive ? all$.pipe( map(ms => ms.filter( m => m.state === 'active'))) : all$;
+        return milestones$.pipe(map(ms => ms.sort( (m1, m2) => m2.id - m1.id)));
     }
 
     public getProjects(): Observable<Project[]> {

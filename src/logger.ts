@@ -1,3 +1,4 @@
+import { REFUSED } from "dns";
 
 export class Logger {
 
@@ -21,4 +22,13 @@ export class Logger {
         const str = ` - ${text}`;
         console.log(str);
     }
+
+    static toRed(text: string) : string {
+        return `${Logger.RED}${text}${Logger.RESET}`;
+    }
+
+    static toYellow(text: string) : string {
+        return `${Logger.YELLOW}${text}${Logger.RESET}`;
+    }
+
 }
