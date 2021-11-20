@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { from, map, Observable } from 'rxjs';
+import { Logger } from './logger';
 
 interface Issue {
     id: number,
@@ -28,8 +29,10 @@ export class HttpClient {
 
     private readonly instance: AxiosInstance;
     private readonly token: string;
+    private readonly logger: Logger;
 
-    public constructor(baseURL: string, token: string) {
+    public constructor(logger: Logger, baseURL: string, token: string) {
+        this.logger = logger;
         this.token = token;
         this.instance = axios.create({
             baseURL
@@ -44,8 +47,8 @@ export class HttpClient {
     private mountGetRequest<T>(path: string): Promise<AxiosResponse<T, any>> {
         const auth = `Bearer ${this.token}`;
         const pth = this.mountUrl(path);
+        this.logger.log(`URL: ${pth}`);
         return this.instance.get<T>(pth, { 'headers': { 'Authorization': auth } });
-
     }
 
     public getOpenedIssues(projectId: number): Observable<Issue[]> {
