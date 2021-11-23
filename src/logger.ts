@@ -18,6 +18,10 @@ export class Logger {
         console.log(`[LOG]: ${text}`);
     }
 
+    print(text: string): void {
+        console.log(`[OUT]: ${text}`);
+    }
+
     printItem(text: string): void {
         const str = ` - ${text}`;
         console.log(str);
