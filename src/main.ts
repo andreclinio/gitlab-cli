@@ -69,7 +69,7 @@ const argv = yargs(hideBin(process.argv))
       const issues$ = httpClient.getMilestoneIssues(projectId, milestoneId);
       issues$.subscribe(issues => {
         issues.forEach(i => {
-          config.logger.printItem(`[#${i.id}] (${getIssueStateText(i)}) - ${i.title} `)
+          config.logger.printItem(`[#${i.iid}] (${getIssueStateText(i)}) - ${i.title} `)
         });
       });
     })
