@@ -1,6 +1,6 @@
 import moment from "moment";
 import { Moment } from "moment";
-import { JsonIssue, JsonMilestone, JsonProject, JsonRelease } from "./json-data";
+import { JsonCommit, JsonIssue, JsonMilestone, JsonProject, JsonRelease, JsonTag } from "./json-data";
 import { Logger } from "./logger";
 
 class Holder<T> {
@@ -144,5 +144,48 @@ export class Project extends Holder<JsonProject> {
 
     get ssh_url_to_repo(): string {
         return this.data.ssh_url_to_repo;
+    }
+}
+
+
+export class Commit extends Holder<JsonCommit> {
+ 
+    constructor(commit: JsonCommit) {
+        super(commit);
+    }
+
+    get id(): string {
+        return this.data.id;
+    }
+
+    get author_name(): string {
+        return this.data.author_name;
+    }
+
+    get commited_at(): Moment {
+        return moment(this.data.committed_date);
+    }
+
+}
+
+
+export class Tag extends Holder<JsonTag> {
+ 
+    constructor(tag: JsonTag) {
+        super(tag);
+    }
+
+    get name(): string {
+        return this.data.name;
+    }
+
+    get message(): string {
+        return this.data.message;
+    }
+
+    get commit(): Commit {
+        const c = this.data.commit;
+        const commit = new Commit(c);
+        return commit;
     }
 }

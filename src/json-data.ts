@@ -32,3 +32,17 @@ export interface JsonRelease {
     released_at: string,
     milestones: JsonMilestone[]
 }
+
+export interface JsonCommit {
+    id: string,
+    short_id: string,
+    committed_date: string,
+    author_name: string,
+}
+
+export interface JsonTag {
+    name: string,
+    message: string,
+    target: string,
+    commit: JsonCommit,
+}

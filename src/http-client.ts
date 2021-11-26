@@ -2,8 +2,8 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { from, map, Observable } from 'rxjs';
 
 import { Logger } from './logger';
-import { JsonIssue, JsonMilestone, JsonProject, JsonRelease } from './json-data';
-import { Issue, Milestone, Project, Release } from './logic';
+import { JsonIssue, JsonMilestone, JsonProject, JsonRelease, JsonTag } from './json-data';
+import { Issue, Milestone, Project, Release, Tag } from './logic';
 
 export class HttpClient {
 
@@ -46,21 +46,33 @@ export class HttpClient {
         return issues$;
     }
 
-    public getMilestones(projectId: number, onlyActive: boolean): Observable<Milestone[]> {
-        const path = `/projects/${projectId}/milestones?per_page=100`;
+    public getMilestones(projectId: number, onlyActive: boolean, quantity?: number): Observable<Milestone[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/milestones?per_page=${card}`;
         const jsonMilestones$ = from(this.mountGetRequest<JsonMilestone[]>(path)).pipe( map( (ax) => ax.data));
         const milestones$ = jsonMilestones$.pipe(map((jms) => jms.map( jm => new Milestone(jm))));
         const results$ = onlyActive ? milestones$.pipe(map(m => m.filter(m => m.state === 'active'))) : milestones$;
         return results$.pipe(map(ms => ms.sort((m1, m2) => m2.id - m1.id)));
     }
 
-    public getReleases(projectId: number): Observable<Release[]> {
-        const path = `/projects/${projectId}/releases?per_page=100`;
+    public getReleases(projectId: number, quantity?: number): Observable<Release[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/releases?per_page=${card}`;
         const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe( map( (ax) => ax.data));
         const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map( (jr) => new Release(jr))));
         const ordered$ = releases$.pipe(map(rs => rs.sort((r1, r2) => r1.released_at.isBefore(r2.released_at) ? 1 : 1)));
         return ordered$;
     }
+
+    public getTags(projectId: number, quantity?: number): Observable<Tag[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/repository/tags?per_page=${card}`;
+        const jsonTags$ = from(this.mountGetRequest<JsonTag[]>(path)).pipe( map( (ax) => ax.data));
+        const tags$ = jsonTags$.pipe(map((jts) => jts.map( (jt) => new Tag(jt))));
+        const ordered$ = tags$.pipe(map(ts => ts.sort((t1, t2) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? 1 : 1)));
+        return ordered$;
+    }
+
 
     public getProjects(): Observable<Project[]> {
         const path = `/projects?per_page=100&order_by=name&sort=asc&membership=true`;

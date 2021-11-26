@@ -15,6 +15,7 @@ export class Config {
     private _data?: Data;
     private _args: yargs.Arguments;
 
+    public static readonly QUANTITY_TAG = 'quantity';
     public static readonly PID_TAG = 'project-id';
     public static readonly MID_TAG = 'milestone-id';
     public static readonly TOKEN_TAG = 'token';
@@ -100,6 +101,14 @@ export class Config {
         return projectId;
     }
 
+    public getQuantity(): number | undefined {
+        const data = this._args[Config.QUANTITY_TAG];
+        if (!data) return undefined;
+        const quantity = data as number;
+        this._logger.log(`quantity: ${quantity}`);
+        return quantity;
+    }
+
     public getMid(): number {
         const milestoneId = this._args[Config.MID_TAG] as number;
         this._logger.log(`milestone id: ${milestoneId}`);
@@ -108,7 +117,13 @@ export class Config {
 
     public getExtraBooleanValue(tag: string): boolean {
         const value = this._args[tag] ? true : false;
-        this._logger.log(`${tag}: ${value}`);
+        this._logger.log(`${tag} (boolean): ${value}`);
+        return value;
+    }
+
+    public getExtraNumberValue(tag: string): number | undefined {
+        const value = this._args[tag] ? this._args[tag] as number : undefined;
+        this._logger.log(`${tag} (number): ${value}`);
         return value;
     }
 
