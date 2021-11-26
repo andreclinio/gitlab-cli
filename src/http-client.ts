@@ -1,29 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { from, map, Observable } from 'rxjs';
+
 import { Logger } from './logger';
-
-export interface Issue {
-    id: number,
-    iid: number,
-    title: string,
-    state: string
-}
-
-export interface Project {
-    id: number,
-    name: string,
-    path_with_namespace: string,
-    default_branch: string,
-    ssh_url_to_repo: string,
-    http_url_to_repo: string
-}
-
-export interface Milestone {
-    id: number,
-    iid: number,
-    title: string,
-    state: string,
-}
+import { JsonIssue, JsonMilestone, JsonProject, JsonRelease } from './json-data';
+import { Issue, Milestone, Project, Release } from './logic';
 
 export class HttpClient {
 
@@ -53,30 +33,39 @@ export class HttpClient {
 
     public getOpenedIssues(projectId: number): Observable<Issue[]> {
         const path = `/projects/${projectId}/issues`;
-        const data$ = from(this.mountGetRequest<Issue[]>(path));
-        const opened$ = data$.pipe(map((issues) => issues.data.filter( i => i.state == "opened")));
+        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe( map( (ax) => ax.data));
+        const issues$ = jsonIssues$.pipe(map((jis) => jis.map( ji => new Issue(ji))));
+        const opened$ = issues$.pipe(map((issues) => issues.filter(i => i.state == "opened")));
         return opened$;
     }
 
     public getMilestoneIssues(projectId: number, milestoneId: number): Observable<Issue[]> {
         const path = `/projects/${projectId}/milestones/${milestoneId}/issues`;
-        const data$ = from(this.mountGetRequest<Issue[]>(path));
-        const issues$ = data$.pipe(map((issues) => issues.data));
+        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe( map( (ax) => ax.data));
+        const issues$ = jsonIssues$.pipe(map((jis) => jis.map( ji => new Issue(ji))));
         return issues$;
     }
 
     public getMilestones(projectId: number, onlyActive: boolean): Observable<Milestone[]> {
         const path = `/projects/${projectId}/milestones?per_page=100`;
-        const data$ = from(this.mountGetRequest<Milestone[]>(path));
-        const all$ = data$.pipe(map((issues) => issues.data));
-        const milestones$ = onlyActive ? all$.pipe( map(ms => ms.filter( m => m.state === 'active'))) : all$;
-        return milestones$.pipe(map(ms => ms.sort( (m1, m2) => m2.id - m1.id)));
+        const jsonMilestones$ = from(this.mountGetRequest<JsonMilestone[]>(path)).pipe( map( (ax) => ax.data));
+        const milestones$ = jsonMilestones$.pipe(map((jms) => jms.map( jm => new Milestone(jm))));
+        const results$ = onlyActive ? milestones$.pipe(map(m => m.filter(m => m.state === 'active'))) : milestones$;
+        return results$.pipe(map(ms => ms.sort((m1, m2) => m2.id - m1.id)));
+    }
+
+    public getReleases(projectId: number): Observable<Release[]> {
+        const path = `/projects/${projectId}/releases?per_page=100`;
+        const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe( map( (ax) => ax.data));
+        const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map( (jr) => new Release(jr))));
+        const ordered$ = releases$.pipe(map(rs => rs.sort((r1, r2) => r1.released_at.isBefore(r2.released_at) ? 1 : 1)));
+        return ordered$;
     }
 
     public getProjects(): Observable<Project[]> {
         const path = `/projects?per_page=100&order_by=name&sort=asc&membership=true`;
-        const data$ = from(this.mountGetRequest<Project[]>(path));
-        const projects$ = data$.pipe(map((res) => res.data));
+        const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe( map( (ax) => ax.data));
+        const projects$ = jsonProjects$.pipe(map((jps) => jps.map( (jp) => new Project(jp))));
         return projects$;
     }
 

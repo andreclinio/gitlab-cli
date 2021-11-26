@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "axios": "^0.24.0",
+    "moment": "^2.29.1",
     "rxjs": "^7.4.0",
     "yargs": "^17.2.1"
   }

@@ -1,12 +1,9 @@
 #!/usr/bin/env node
 
-import { readFileSync } from 'fs';
-import yargs, { config } from 'yargs';
+
+import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { Config } from './config';
-import { Issue, Milestone } from './http-client';
-import { Logger } from './logger';
-
 
 function addPidOption(x: yargs.Argv): yargs.Argv {
   return x.option(Config.PID_TAG, { type: 'number', alias: 'pid', demandOption: true, description: "Set the project id" });
@@ -16,24 +13,10 @@ function addMidOption(x: yargs.Argv): yargs.Argv {
   return x.option(Config.MID_TAG, { type: 'number', alias: 'mid', demandOption: true, description: "Set the milestone id" });
 }
 
-function getIssueStateText(issue: Issue): string {
-  const state = issue.state;
-  const opened = issue.state.trim().toLowerCase() === "opened";
-  const stateStr = opened ? Logger.toRed(state) : state;
-  return stateStr;
-}
-
-function getMilestoneStateText(milestone: Milestone): string {
-  const state = milestone.state;
-  const active = milestone.state.trim().toLowerCase() === "active";
-  const stateStr = active ? Logger.toYellow(state) : state;
-  return stateStr;
-}
-
 
 const argv = yargs(hideBin(process.argv))
   .scriptName('gitlab-cli')
-  .usage('$0 <command> --token <token> --url <url> [arguments]')
+  .usage(`$0 <command> (--${Config.TOKEN_TAG} <token> || --${Config.AUTO_TOKEN_TAG}) (--${Config.URL_TAG} <url> || --${Config.AUTO_URL_TAG}) [arguments]`)
   .options({
     verbose: { default: false, demandOption: false, type: 'boolean', description: "Show logs" },
     token: { demandOption: false, type: 'string', description: "Set personel access token" },
@@ -52,7 +35,7 @@ const argv = yargs(hideBin(process.argv))
       const projectId = config.getPid();
       const issues$ = httpClient.getOpenedIssues(projectId);
       issues$.subscribe(issues => {
-        issues.forEach(i => config.logger.printItem(i.title))
+        issues.forEach(i => config.logger.printItem(`[#${i.iid}] - ${i.title}`));
       });
     })
 
@@ -69,7 +52,7 @@ const argv = yargs(hideBin(process.argv))
       const issues$ = httpClient.getMilestoneIssues(projectId, milestoneId);
       issues$.subscribe(issues => {
         issues.forEach(i => {
-          config.logger.printItem(`[#${i.iid}] (${getIssueStateText(i)}) - ${i.title} `)
+          config.logger.printItem(`[#${i.iid}] (${i.stateText}) - ${i.title} `)
         });
       });
     })
@@ -98,8 +81,28 @@ const argv = yargs(hideBin(process.argv))
       const onlyActive = config.getExtraBooleanValue('only-active');
       const milestones$ = httpClient.getMilestones(projectId, onlyActive);
       milestones$.subscribe(milestones => {
-        milestones.forEach(m => config.logger.printItem(`[id:${m.id}] (${getMilestoneStateText(m)}) - ${m.title}`));
+        milestones.forEach(m => config.logger.printItem(`[id:${m.id}] (${m.stateText}) - ${m.title}`));
       });
+    })
+
+  .command(`releases`, "see project releases",
+    (yargs) => {
+      addPidOption(yargs);
+    },
+    (argv) => {
+      const config = new Config(argv);
+      const httpClient = config.createHttpClient();
+      const projectId = config.getPid();
+      const releases$ = httpClient.getReleases(projectId);
+      releases$.subscribe(releases => {
+        releases.forEach(r => {
+          config.logger.printItem(`[${r.name}] - ${r.description} - ${r.released_at}`);
+          const milestones = r.milestones
+          milestones.forEach( m => {
+            milestones.forEach(m => config.logger.printItem(`Milestone [id:${m.id}] (${m.stateText}) - ${m.title}`, 2));
+          });
+        });
+      })
     })
 
   .conflicts('token', 'auto-token')

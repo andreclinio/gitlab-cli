@@ -25,7 +25,7 @@ export class Config {
     public static CONFIG_FILE_NAME = '.gitlab-cli';
 
     constructor(args: yargs.Arguments) {
-        
+
         this._logger = new Logger(args['verbose'] as boolean);
         this._logger.log(`Loading config...`);
         const home = process.env['HOME'];
@@ -35,7 +35,9 @@ export class Config {
             this._logger.log(`Config file found at ${filePath}`);
             this._data = JSON.parse(content) as Data;
         }
-        else this._data = undefined;
+        else {
+            this._data = undefined;
+        }
         this._args = args;
     }
 
@@ -52,17 +54,38 @@ export class Config {
 
     public getToken(): string {
         const autoToken = this.getExtraBooleanValue(Config.AUTO_TOKEN_TAG);
-        const token = autoToken ? this._data!.token : this._args[Config.TOKEN_TAG] as string;
+        let token: string;
+        if (autoToken) {
+            if (!this._data || !this._data.token) {
+                this._logger.print(`No token defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-token!`);
+                exit(1);
+            }
+            token = this._data!.token;
+        }
+        else {
+            token = this._args[Config.TOKEN_TAG] as string;
+        }
         if (!token) {
             this._logger.print("Token not found!");
             exit(1);
         }
+        this._logger.log(`token: ${token}`);
         return token;
     }
 
     public getUrl(): string {
         const autoUrl = this.getExtraBooleanValue(Config.AUTO_URL_TAG);
-        const url = autoUrl ? this._data!.url : this._args[Config.URL_TAG] as string;
+        let url: string;
+        if (autoUrl) {
+            if (!this._data || !this._data.url) {
+                this._logger.print(`No url defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-url!`);
+                exit(1);
+            }
+            url = this._data!.url;
+        }
+        else {
+            url = this._args[Config.URL_TAG] as string;
+        }
         if (!url) {
             this._logger.print("URL not found!");
             exit(1);

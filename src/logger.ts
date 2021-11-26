@@ -22,8 +22,9 @@ export class Logger {
         console.log(`[OUT]: ${text}`);
     }
 
-    printItem(text: string): void {
-        const str = ` - ${text}`;
+    printItem(text: string, level?: number): void {
+        const ident = !level ? 1 : level;
+        const str = `${" ".repeat((ident-1)*3)} - ${text}`;
         console.log(str);
     }
 
