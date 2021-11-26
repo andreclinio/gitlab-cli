@@ -14,7 +14,7 @@ function addMidOption(argv: yargs.Argv): yargs.Argv {
 }
 
 function addQuantityOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option({ 'quantity': { default: false, alias: 'n', demandOption: false, type: 'number', description: "Show only <n> items" } });
+  return argv.option({ 'quantity': { alias: 'n', demandOption: false, type: 'number', description: "Show only <n> items" } });
 }
 
 
