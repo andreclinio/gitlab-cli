@@ -15,13 +15,17 @@ export class Config {
     private _data?: Data;
     private _args: yargs.Arguments;
 
-    public static readonly QUANTITY_TAG = 'quantity';
-    public static readonly PID_TAG = 'project-id';
-    public static readonly MID_TAG = 'milestone-id';
     public static readonly TOKEN_TAG = 'token';
-    public static readonly URL_TAG = 'token';
+    public static readonly URL_TAG = 'url';
     public static readonly AUTO_TOKEN_TAG = 'auto-token';
     public static readonly AUTO_URL_TAG = 'auto-url';
+
+    public static readonly RNA_TAG = 'release-name';
+    public static readonly TNA_TAG = 'tag-name';
+    public static readonly PNA_TAG = 'project-name';
+    public static readonly MNA_TAG = 'milestone-name';
+
+    public static readonly QUANTITY_TAG = 'quantity';
 
     public static CONFIG_FILE_NAME = '.gitlab-cli';
 
@@ -95,10 +99,22 @@ export class Config {
         return url;
     }
 
-    public getPid(): number {
-        const projectId = this._args[Config.PID_TAG] as number;
-        this._logger.log(`project id: ${projectId}`);
-        return projectId;
+    public getPna(): string {
+        const projectName = this._args[Config.PNA_TAG] as string;
+        this._logger.log(`project name: ${projectName}`);
+        return projectName;
+    }
+
+    public getRna(): string {
+        const releaseNa = this._args[Config.RNA_TAG] as string;
+        this._logger.log(`release name: ${releaseNa}`);
+        return releaseNa;
+    }
+
+    public getTna(): string {
+        const tagNa = this._args[Config.TNA_TAG] as string;
+        this._logger.log(`tag name: ${tagNa}`);
+        return tagNa;
     }
 
     public getQuantity(): number | undefined {
@@ -109,10 +125,10 @@ export class Config {
         return quantity;
     }
 
-    public getMid(): number {
-        const milestoneId = this._args[Config.MID_TAG] as number;
-        this._logger.log(`milestone id: ${milestoneId}`);
-        return milestoneId;
+    public getMna(): string {
+        const milestoneName = this._args[Config.MNA_TAG] as string;
+        this._logger.log(`milestone name: ${milestoneName}`);
+        return milestoneName;
     }
 
     public getExtraBooleanValue(tag: string): boolean {

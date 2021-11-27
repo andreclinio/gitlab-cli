@@ -1,6 +1,7 @@
 import { REFUSED } from "dns";
 
 export class Logger {
+    
 
     private readonly verbose: boolean;
 
@@ -18,6 +19,11 @@ export class Logger {
         console.log(`[LOG]: ${text}`);
     }
 
+    exit(text: string) {
+        console.log(`[EXIT]: ${text}`);
+        process.exit(1);
+    }
+  
     print(text: string): void {
         console.log(`[OUT]: ${text}`);
     }

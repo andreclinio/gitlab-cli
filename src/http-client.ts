@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { from, map, Observable } from 'rxjs';
+import { forkJoin, from, map, mergeMap, Observable, of, throwError } from 'rxjs';
 
 import { Logger } from './logger';
 import { JsonIssue, JsonMilestone, JsonProject, JsonRelease, JsonTag } from './json-data';
@@ -19,6 +19,113 @@ export class HttpClient {
         });
     }
 
+    public getProjects(): Observable<Project[]> {
+        const path = `/projects?per_page=100&order_by=name&sort=asc&membership=true`;
+        const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe(map((ax) => ax.data));
+        const projects$ = jsonProjects$.pipe(map((jps) => jps.map((jp) => new Project(jp))));
+        return projects$;
+    }
+
+    public getOpenedIssues(projectName: string): Observable<Issue[]> {
+        const project$ = this._getProjectByName(projectName);
+        const issues$ = project$.pipe(mergeMap(p => this._getOpenedIssues(p.id)));
+        return issues$;
+    }
+
+    public getMilestones(projectName: string, onlyActive: boolean, quantity?: number): Observable<Milestone[]> {
+        const project$ = this._getProjectByName(projectName);
+        const milestones$ = project$.pipe(mergeMap(p => this._getMilestones(p.id, onlyActive, quantity)));
+        return milestones$;
+    }
+
+    public getMilestoneIssues(projectName: string, milestoneName: string): Observable<Issue[]> {
+        const x$ = this._getMilestoneByNames(projectName, milestoneName);
+        const issues$ = x$.pipe( mergeMap (x => this._getMilestoneIssues(x[0].id, x[1].id)));
+        return issues$;
+    }
+
+    public getReleases(projectName: string, quantity?: number): Observable<Release[]> {
+        const project$ = this._getProjectByName(projectName);
+        const releases$ = project$.pipe(mergeMap(p => this._getReleases(p.id, quantity)));
+        return releases$;
+    }
+
+    public getReleaseIssues(projectName: string, releaseName: string): Observable<Issue[]> {
+        // TODO
+        return of([]);
+    }
+
+    public getTags(projectName: string, quantity?: number): Observable<Tag[]> {
+        const project$ = this._getProjectByName(projectName);
+        const tags$ = project$.pipe(mergeMap(p => this._getTags(p.id, quantity)));
+        return tags$;
+    }
+
+    private _getMilestones(projectId: number, onlyActive: boolean, quantity?: number): Observable<Milestone[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/milestones?per_page=${card}`;
+        const jsonMilestones$ = from(this.mountGetRequest<JsonMilestone[]>(path)).pipe(map((ax) => ax.data));
+        const milestones$ = jsonMilestones$.pipe(map((jms) => jms.map(jm => new Milestone(jm))));
+        const results$ = onlyActive ? milestones$.pipe(map(m => m.filter(m => m.state === 'active'))) : milestones$;
+        return results$.pipe(map(ms => ms.sort((m1, m2) => m2.id - m1.id)));
+    }
+
+    private _getMilestone(projectId: number, milestoneId: number): Observable<Milestone> {
+        const path = `/projects/${projectId}/milestones/${milestoneId}`;
+        const jsonMilestone$ = from(this.mountGetRequest<JsonMilestone>(path)).pipe(map((ax) => ax.data));
+        const milestone$ = jsonMilestone$.pipe(map((jm) => new Milestone(jm)));
+        return milestone$;
+    }
+
+    private _getMilestoneByNames(projectName: string, milestoneName: string): Observable<[Project, Milestone]> {
+        const project$ = this._getProjectByName(projectName);
+        const milestones$ = project$.pipe(mergeMap(p => this._getMilestones(p.id, false)));
+        const milestone$ = milestones$.pipe(map(ms => ms.find(m => m.title === milestoneName)));
+        const result$ = milestone$.pipe(mergeMap(m => m ? of(m) : throwError(() => new Error("milestone not found"))));
+        const x$ = forkJoin([project$, result$]);
+        return x$;
+    }
+
+    private _getReleases(projectId: number, quantity?: number): Observable<Release[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/releases?per_page=${card}`;
+        const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe(map((ax) => ax.data));
+        const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map((jr) => new Release(jr))));
+        const ordered$ = releases$.pipe(map(rs => rs.sort((r1, r2) => r1.released_at.isBefore(r2.released_at) ? 1 : 1)));
+        return ordered$;
+    }
+
+    private _getTags(projectId: number, quantity?: number): Observable<Tag[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/repository/tags?per_page=${card}`;
+        const jsonTags$ = from(this.mountGetRequest<JsonTag[]>(path)).pipe(map((ax) => ax.data));
+        const tags$ = jsonTags$.pipe(map((jts) => jts.map((jt) => new Tag(jt))));
+        const ordered$ = tags$.pipe(map(ts => ts.sort((t1, t2) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? 1 : 1)));
+        return ordered$;
+    }
+
+    private _getProjectByName(projectName: string): Observable<Project> {
+        const projects$ = this.getProjects();
+        const project$ = projects$.pipe(map(ps => ps.find(p => p.name === projectName)));
+        const result$ = project$.pipe(mergeMap(p => p ? of(p) : throwError(() => new Error("project not found"))));
+        return result$;
+    }
+
+    private _getOpenedIssues(projectId: number): Observable<Issue[]> {
+        const path = `/projects/${projectId}/issues`;
+        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
+        const issues$ = jsonIssues$.pipe(map((jis) => jis.map(ji => new Issue(ji))));
+        const opened$ = issues$.pipe(map((issues) => issues.filter(i => i.state == "opened")));
+        return opened$;
+    }
+
+    private _getMilestoneIssues(projectId: number, milestoneId: number): Observable<Issue[]> {
+        const path = `/projects/${projectId}/milestones/${milestoneId}/issues`;
+        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
+        const issues$ = jsonIssues$.pipe(map((jis) => jis.map(ji => new Issue(ji))));
+        return issues$;
+    }
+
     private mountUrl(path: string): string {
         const url = `/api/v4/${path}`;
         return url;
@@ -29,56 +136,6 @@ export class HttpClient {
         const pth = this.mountUrl(path);
         this.logger.log(`URL: ${pth}`);
         return this.instance.get<T>(pth, { 'headers': { 'Authorization': auth } });
-    }
-
-    public getOpenedIssues(projectId: number): Observable<Issue[]> {
-        const path = `/projects/${projectId}/issues`;
-        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe( map( (ax) => ax.data));
-        const issues$ = jsonIssues$.pipe(map((jis) => jis.map( ji => new Issue(ji))));
-        const opened$ = issues$.pipe(map((issues) => issues.filter(i => i.state == "opened")));
-        return opened$;
-    }
-
-    public getMilestoneIssues(projectId: number, milestoneId: number): Observable<Issue[]> {
-        const path = `/projects/${projectId}/milestones/${milestoneId}/issues`;
-        const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe( map( (ax) => ax.data));
-        const issues$ = jsonIssues$.pipe(map((jis) => jis.map( ji => new Issue(ji))));
-        return issues$;
-    }
-
-    public getMilestones(projectId: number, onlyActive: boolean, quantity?: number): Observable<Milestone[]> {
-        const card = quantity ? quantity : 100;
-        const path = `/projects/${projectId}/milestones?per_page=${card}`;
-        const jsonMilestones$ = from(this.mountGetRequest<JsonMilestone[]>(path)).pipe( map( (ax) => ax.data));
-        const milestones$ = jsonMilestones$.pipe(map((jms) => jms.map( jm => new Milestone(jm))));
-        const results$ = onlyActive ? milestones$.pipe(map(m => m.filter(m => m.state === 'active'))) : milestones$;
-        return results$.pipe(map(ms => ms.sort((m1, m2) => m2.id - m1.id)));
-    }
-
-    public getReleases(projectId: number, quantity?: number): Observable<Release[]> {
-        const card = quantity ? quantity : 100;
-        const path = `/projects/${projectId}/releases?per_page=${card}`;
-        const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe( map( (ax) => ax.data));
-        const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map( (jr) => new Release(jr))));
-        const ordered$ = releases$.pipe(map(rs => rs.sort((r1, r2) => r1.released_at.isBefore(r2.released_at) ? 1 : 1)));
-        return ordered$;
-    }
-
-    public getTags(projectId: number, quantity?: number): Observable<Tag[]> {
-        const card = quantity ? quantity : 100;
-        const path = `/projects/${projectId}/repository/tags?per_page=${card}`;
-        const jsonTags$ = from(this.mountGetRequest<JsonTag[]>(path)).pipe( map( (ax) => ax.data));
-        const tags$ = jsonTags$.pipe(map((jts) => jts.map( (jt) => new Tag(jt))));
-        const ordered$ = tags$.pipe(map(ts => ts.sort((t1, t2) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? 1 : 1)));
-        return ordered$;
-    }
-
-
-    public getProjects(): Observable<Project[]> {
-        const path = `/projects?per_page=100&order_by=name&sort=asc&membership=true`;
-        const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe( map( (ax) => ax.data));
-        const projects$ = jsonProjects$.pipe(map((jps) => jps.map( (jp) => new Project(jp))));
-        return projects$;
     }
 
 }
