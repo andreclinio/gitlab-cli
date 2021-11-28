@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { forkJoin, from, map, mergeMap, Observable, of, throwError } from 'rxjs';
+import { forkJoin, from, map, mergeAll, mergeMap, Observable, of, throwError } from 'rxjs';
 
 import { Logger } from './logger';
-import { JsonIssue, JsonMilestone, JsonProject, JsonRelease, JsonTag } from './json-data';
-import { Issue, Milestone, Project, Release, Tag } from './logic';
+import { JsonIssue, JsonMilestone, JsonPipeline, JsonProject, JsonRelease, JsonTag } from './json-data';
+import { Issue, Milestone, Pipeline, Project, Release, Tag } from './logic';
 
 export class HttpClient {
 
@@ -38,9 +38,15 @@ export class HttpClient {
         return milestones$;
     }
 
+    public getPipelines(projectName: string, quantity?: number): Observable<Pipeline[]> {
+        const project$ = this._getProjectByName(projectName);
+        const pipelines$ = project$.pipe(mergeMap(p => this._getPipelines(p.id, quantity)));
+        return pipelines$;
+    }
+
     public getMilestoneIssues(projectName: string, milestoneName: string): Observable<Issue[]> {
         const x$ = this._getMilestoneByNames(projectName, milestoneName);
-        const issues$ = x$.pipe( mergeMap (x => this._getMilestoneIssues(x[0].id, x[1].id)));
+        const issues$ = x$.pipe(mergeMap(x => this._getMilestoneIssues(x[0].id, x[1].id)));
         return issues$;
     }
 
@@ -51,8 +57,20 @@ export class HttpClient {
     }
 
     public getReleaseIssues(projectName: string, releaseName: string): Observable<Issue[]> {
-        // TODO
-        return of([]);
+        const pr$ = this._getReleaseByNames(projectName, releaseName);
+        const pid_mids$ = pr$.pipe(map(pr => {
+            const pid = pr[0].id as number;
+            const mids = pr[1].milestones.map(m => m.id);
+            const r = [pid, mids] as ([number, number[]]);
+            return r;
+        }));
+        const x$ = pid_mids$.pipe(
+            mergeMap(pid_mids => {
+                const pid = pid_mids[0];
+                const mids = pid_mids[1];
+                return mids.map(mid => this._getMilestoneIssues(pid, mid));
+            }), mergeAll());
+        return x$;
     }
 
     public getTags(projectName: string, quantity?: number): Observable<Tag[]> {
@@ -81,7 +99,25 @@ export class HttpClient {
         const project$ = this._getProjectByName(projectName);
         const milestones$ = project$.pipe(mergeMap(p => this._getMilestones(p.id, false)));
         const milestone$ = milestones$.pipe(map(ms => ms.find(m => m.title === milestoneName)));
-        const result$ = milestone$.pipe(mergeMap(m => m ? of(m) : throwError(() => new Error("milestone not found"))));
+        const result$ = milestone$.pipe(mergeMap(m => m ? of(m) : throwError(() => new Error(`milestone ${milestoneName} not found`))));
+        const x$ = forkJoin([project$, result$]);
+        return x$;
+    }
+
+    private _getReleaseByNames(projectName: string, releaseName: string): Observable<[Project, Release]> {
+        const project$ = this._getProjectByName(projectName);
+        const releases$ = project$.pipe(mergeMap(p => this._getReleases(p.id)));
+        const release$ = releases$.pipe(map(rs => rs.find(r => r.name === releaseName)));
+        const result$ = release$.pipe(mergeMap(m => m ? of(m) : throwError(() => new Error(`release ${releaseName} not found`))));
+        const x$ = forkJoin([project$, result$]);
+        return x$;
+    }
+
+    private _getTagByNames(projectName: string, tagName: string): Observable<[Project, Tag]> {
+        const project$ = this._getProjectByName(projectName);
+        const tags$ = project$.pipe(mergeMap(p => this._getTags(p.id)));
+        const tag$ = tags$.pipe(map(ts => ts.find(t => t.name === tagName)));
+        const result$ = tag$.pipe(mergeMap(t => t ? of(t) : throwError(() => new Error(`tag ${tagName} not found`))));
         const x$ = forkJoin([project$, result$]);
         return x$;
     }
@@ -92,6 +128,15 @@ export class HttpClient {
         const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe(map((ax) => ax.data));
         const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map((jr) => new Release(jr))));
         const ordered$ = releases$.pipe(map(rs => rs.sort((r1, r2) => r1.released_at.isBefore(r2.released_at) ? 1 : 1)));
+        return ordered$;
+    }
+
+    private _getPipelines(projectId: number, quantity?: number): Observable<Pipeline[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/pipelines/?per_page=${card}`;
+        const jsonPipelines$ = from(this.mountGetRequest<JsonPipeline[]>(path)).pipe(map((ax) => ax.data));
+        const pipelines$ = jsonPipelines$.pipe(map((jps) => jps.map((jp) => new Pipeline(jp))));
+        const ordered$ = pipelines$.pipe(map(rs => rs.sort((r1, r2) => r1.created_at.isBefore(r2.created_at) ? 1 : 1)));
         return ordered$;
     }
 
@@ -107,7 +152,7 @@ export class HttpClient {
     private _getProjectByName(projectName: string): Observable<Project> {
         const projects$ = this.getProjects();
         const project$ = projects$.pipe(map(ps => ps.find(p => p.name === projectName)));
-        const result$ = project$.pipe(mergeMap(p => p ? of(p) : throwError(() => new Error("project not found"))));
+        const result$ = project$.pipe(mergeMap(p => p ? of(p) : throwError(() => new Error(`project ${projectName} not found`))));
         return result$;
     }
 

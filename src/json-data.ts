@@ -23,6 +23,17 @@ export interface JsonProject {
     http_url_to_repo: string
 }
 
+export interface JsonPipeline {
+    id: number,
+    project_id: number,
+    ref: string,
+    status: string,
+    sha: string,
+    created_at: string,
+    updated_at: string,
+    web_url: string,
+}
+
 
 export interface JsonRelease {
     name: string,

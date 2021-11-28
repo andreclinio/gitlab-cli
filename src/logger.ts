@@ -1,4 +1,5 @@
 import { REFUSED } from "dns";
+import { Moment } from "moment";
 
 export class Logger {
     
@@ -7,6 +8,8 @@ export class Logger {
 
     public static readonly RED = '\x1b[31m';
     public static readonly YELLOW = '\x1b[33m';
+    public static readonly GREEN = '\x1b[32m';
+    public static readonly CYAN = '\x1b[36m';
     public static readonly RESET = '\x1b[0m';
 
     constructor(verbose: boolean) {
@@ -38,8 +41,22 @@ export class Logger {
         return `${Logger.RED}${text}${Logger.RESET}`;
     }
 
+    static toGreen(text: string) : string {
+        return `${Logger.GREEN}${text}${Logger.RESET}`;
+    }
+
     static toYellow(text: string) : string {
         return `${Logger.YELLOW}${text}${Logger.RESET}`;
     }
+
+    static toCyan(text: string) : string {
+        return `${Logger.CYAN}${text}${Logger.RESET}`;
+    }
+
+    static dthr(moment: Moment): string {
+        if (!moment) return '?';
+        return `${moment.format('DD/MM/YYYY HH:mm:ss')}`;
+      }
+    
 
 }

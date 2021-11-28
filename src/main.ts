@@ -161,7 +161,7 @@ const argv = yargs(hideBin(process.argv))
           releases.forEach(r => {
             config.logger.printItem(`[${r.name}] - ${r.description} - ${r.released_at}`);
             const milestones = r.milestones
-            milestones.forEach(m => config.logger.printItem(`Milestone [id:${m.id}] (${m.stateText}) - ${m.title}`, 2));
+            milestones.forEach(m => config.logger.printItem(`[id:${m.id}] (${m.stateText}) - ${m.title}`, 2));
           });
         },
         error: (err) => {
@@ -169,6 +169,30 @@ const argv = yargs(hideBin(process.argv))
         }
       })
     })
+
+  .command(`pipelines`, "see project pipelines",
+    (yargs) => {
+      addPnaOption(yargs);
+      addQuantityOption(yargs);
+    },
+    (argv) => {
+      const config = new Config(argv);
+      const httpClient = config.createHttpClient();
+      const projectName = config.getPna();
+      const quantity = config.getQuantity();
+      const pipelines$ = httpClient.getPipelines(projectName, quantity);
+      pipelines$.subscribe({
+        next: pipelines => {
+          pipelines.forEach(p => {
+            config.logger.printItem(`[${p.id}] (${p.statusText}) - ${p.ref} - ${Logger.dthr(p.created_at)} :: ${p.sha_resumed}`);
+          });
+        },
+        error: (err) => {
+          config.logger.exit(err);
+        }
+      })
+    })
+
 
   .command(`tags`, "see project tags",
     (yargs) => {
@@ -184,7 +208,7 @@ const argv = yargs(hideBin(process.argv))
       tags$.subscribe({
         next: tags => {
           tags.forEach(t => {
-            config.logger.printItem(`[${t.name}] - ${t.message} - ${t.commit.commited_at}`);
+            config.logger.printItem(`[${t.name}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
           });
         },
         error: (err) => {
