@@ -1,10 +1,14 @@
 {
-  "name": "gitlab-cli",
+  "name": "@andreclinio/gitlab-cli",
   "version": "0.1.0",
   "description": "GitLab command line viewer program",
   "main": "main.js",
   "bin": {
     "gitlab-cli": "./build/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andreclinio/gitlab-cli.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,7 +18,11 @@
     "scripts": "build/**/*.js"
   },
   "keywords": [],
-  "author": "André Luiz Clinio (andre.clinio@gmail.com)",
+  "author": { 
+     "name": "André Luiz Clinio (andre.clinio@gmail.com)",
+     "email": "andre.clinio@gmail.com",
+     "url": "https://webtorrent.io"
+  },
   "license": "ISC",
   "devDependencies": {
     "@types/axios": "^0.14.0",

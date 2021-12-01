@@ -38,6 +38,12 @@ export class HttpClient {
         return milestones$;
     }
 
+    public getSucessfulPipelineofTag(projectName: string, tagName: string): Observable<Pipeline | undefined> {
+        const pipelines$ = this.getPipelines(projectName);
+        const pipeline$ = pipelines$.pipe( map( ps => ps.find( p => p.success && p.ref === tagName)));
+        return pipeline$;
+    }
+
     public getPipelines(projectName: string, quantity?: number): Observable<Pipeline[]> {
         const project$ = this._getProjectByName(projectName);
         const pipelines$ = project$.pipe(mergeMap(p => this._getPipelines(p.id, quantity)));
@@ -133,16 +139,15 @@ export class HttpClient {
 
     private _getPipelines(projectId: number, quantity?: number): Observable<Pipeline[]> {
         const card = quantity ? quantity : 100;
-        const path = `/projects/${projectId}/pipelines/?per_page=${card}`;
+        const path = `/projects/${projectId}/pipelines/?per_page=${card}&order_by=id&sort=desc`;
         const jsonPipelines$ = from(this.mountGetRequest<JsonPipeline[]>(path)).pipe(map((ax) => ax.data));
         const pipelines$ = jsonPipelines$.pipe(map((jps) => jps.map((jp) => new Pipeline(jp))));
-        const ordered$ = pipelines$.pipe(map(rs => rs.sort((r1, r2) => r1.created_at.isBefore(r2.created_at) ? 1 : 1)));
-        return ordered$;
+        return pipelines$;
     }
 
     private _getTags(projectId: number, quantity?: number): Observable<Tag[]> {
         const card = quantity ? quantity : 100;
-        const path = `/projects/${projectId}/repository/tags?per_page=${card}`;
+        const path = `/projects/${projectId}/repository/tags?order_by=updated&sort=desc&per_page=${card}`;
         const jsonTags$ = from(this.mountGetRequest<JsonTag[]>(path)).pipe(map((ax) => ax.data));
         const tags$ = jsonTags$.pipe(map((jts) => jts.map((jt) => new Tag(jt))));
         const ordered$ = tags$.pipe(map(ts => ts.sort((t1, t2) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? 1 : 1)));

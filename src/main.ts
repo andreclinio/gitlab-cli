@@ -159,9 +159,9 @@ const argv = yargs(hideBin(process.argv))
       releases$.subscribe({
         next: releases => {
           releases.forEach(r => {
-            config.logger.printItem(`[${r.name}] - ${r.description} - ${r.released_at}`);
+            config.logger.printItem(`[${r.name}] tag: ${r.tag_name} - ${r.description} - ${Logger.dthr(r.released_at)}`);
             const milestones = r.milestones
-            milestones.forEach(m => config.logger.printItem(`[id:${m.id}] (${m.stateText}) - ${m.title}`, 2));
+            milestones.forEach(m => config.logger.printItem(`[milestone: #${m.id}] (${m.stateText}) - ${m.title}`, 2));
           });
         },
         error: (err) => {
@@ -208,7 +208,20 @@ const argv = yargs(hideBin(process.argv))
       tags$.subscribe({
         next: tags => {
           tags.forEach(t => {
-            config.logger.printItem(`[${t.name}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
+            const tagName = t.name;
+            const pipeline$ = httpClient.getSucessfulPipelineofTag(projectName, tagName);
+            pipeline$.subscribe({
+              next: pipeline => {
+                config.logger.printItem(`[${tagName}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
+                if (pipeline)
+                  config.logger.printItem(`[Pipeline: #${pipeline.id}] - ${pipeline.statusText} - ${Logger.dthr(pipeline.created_at)}`, 2);
+                else
+                  config.logger.printItem(`[No pipeline]`, 2);
+              },
+              error: err => { 
+                config.logger.exit(err);
+              }
+            });
           });
         },
         error: (err) => {
