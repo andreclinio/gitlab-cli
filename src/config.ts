@@ -63,18 +63,16 @@ export class Config {
     let token: string;
     if (autoToken) {
       if (!this._data || !this._data.token) {
-        this._logger.print(
+        this._logger.exit(
           `No token defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-token!`
         );
-        exit(1);
       }
       token = this._data!.token;
     } else {
       token = this._args[Config.TOKEN_TAG] as string;
     }
     if (!token) {
-      this._logger.print("Token not found!");
-      exit(1);
+      this._logger.exit("Token not found!");
     }
     const n = 2;
     const prefixToken = token.substring(0, n);
@@ -89,18 +87,16 @@ export class Config {
     let url: string;
     if (autoUrl) {
       if (!this._data || !this._data.url) {
-        this._logger.print(
+        this._logger.exit(
           `No url defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-url!`
         );
-        exit(1);
       }
       url = this._data!.url;
     } else {
       url = this._args[Config.URL_TAG] as string;
     }
     if (!url) {
-      this._logger.print("URL not found!");
-      exit(1);
+      this._logger.exit("URL not found!");
     }
     this._logger.log(`url: ${url}`);
     return url;

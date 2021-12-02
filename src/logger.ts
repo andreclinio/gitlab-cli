@@ -20,7 +20,7 @@ export class Logger {
   }
 
   exit(text: string) {
-    this.toConsole(`[EXIT]: ${text}`);
+    this.toConsole(`[EXIT]: ${Logger.toRed(text)}`);
     process.exit(1);
   }
 
