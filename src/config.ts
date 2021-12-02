@@ -1,8 +1,10 @@
-import fs from "fs";
+
+import { existsSync, readFileSync } from "fs";
 import { exit } from "process";
-import yargs from "yargs";
+import { Arguments } from "yargs";
 import { HttpClient } from "./http-client";
 import { Logger } from "./logger";
+import { homedir } from "os";
 
 interface Data {
   token: string;
@@ -12,7 +14,7 @@ interface Data {
 export class Config {
   private _logger: Logger;
   private _data?: Data;
-  private _args: yargs.Arguments;
+  private _args: Arguments;
 
   public static readonly TOKEN_TAG = "token";
   public static readonly URL_TAG = "url";
@@ -28,14 +30,14 @@ export class Config {
 
   public static CONFIG_FILE_NAME = ".gitlab-cli";
 
-  constructor(args: yargs.Arguments) {
+  constructor(args: Arguments) {
     this._logger = new Logger(args.verbose as boolean);
-    const home = process.env.HOME;
+    const home = homedir();
     this._logger.log(`Home directory is: ${!home ? "???" : home}`);
     const filePath = `${home}/${Config.CONFIG_FILE_NAME}`;
     this._logger.log(`Loading config from ${filePath}...`);
-    if (home && fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, { encoding: "utf-8" });
+    if (home && existsSync(filePath)) {
+      const content = readFileSync(filePath, { encoding: "utf-8" });
       this._logger.log(`Config file found.`);
       this._data = JSON.parse(content) as Data;
     } else {
