@@ -2,7 +2,10 @@
   "name": "@andreclinio/gitlab-cli",
   "version": "0.1.0",
   "description": "GitLab command line viewer program",
-  "keywords": ["git", "gitlab"],
+  "keywords": [
+    "git",
+    "gitlab"
+  ],
   "author": {
     "name": "André Luiz Clinio (andre.clinio@gmail.com)",
     "email": "andre.clinio@gmail.com",
@@ -13,7 +16,6 @@
     "type": "git",
     "url": "https://github.com/andreclinio/gitlab-cli.git"
   },
-
   "main": "main.js",
   "bin": {
     "gitlab-cli": "./build/main.js"
@@ -25,20 +27,25 @@
     "build": "tsc",
     "lint": "tslint -p tsconfig.json",
     "prepare": "npm run build",
-    "prepublishOnly" : "npm test",
-    "preversion" : "npm run lint",
+    "prepublishOnly": "npm test",
+    "preversion": "npm run lint",
     "version": "git add -A src",
     "postversion": "git push && git push --tags"
   },
   "pkg": {
     "scripts": "build/**/*.js"
   },
-  "files": [ "build/**/*"],
+  "files": [
+    "build/**/*"
+  ],
   "devDependencies": {
     "@types/axios": "^0.14.0",
+    "@types/jest": "^27.0.3",
     "@types/node": "^16.11.7",
     "@types/yargs": "^17.0.7",
+    "jest": "^27.4.3",
     "prettier": "^2.5.0",
+    "ts-jest": "^27.0.7",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.5.2"
