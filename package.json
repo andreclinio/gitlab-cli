@@ -32,7 +32,8 @@
     "version": "git add -A src",
     "postversion": "git push && git push --tags",
     "release": "release-it",
-    "release-beta": "release-it --preRelease=beta"
+    "release-beta": "release-it --preRelease=beta",
+    "snapcraft": "rm -f *.snap && npm run build && snapcraft"
   },
   "release-it": {
     "git": {

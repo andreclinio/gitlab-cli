@@ -1,10 +1,11 @@
 
-import { existsSync, readFileSync } from "fs";
+import { accessSync, constants, existsSync, readFileSync } from "fs";
 import { exit } from "process";
 import { Arguments } from "yargs";
 import { HttpClient } from "./http-client";
 import { Logger } from "./logger";
 import { homedir } from "os";
+import { sep } from "path";
 
 interface Data {
   token: string;
@@ -32,19 +33,52 @@ export class Config {
 
   constructor(args: Arguments) {
     this._logger = new Logger(args.verbose as boolean);
-    const home = homedir();
-    this._logger.log(`Home directory is: ${!home ? "???" : home}`);
-    const filePath = `${home}/${Config.CONFIG_FILE_NAME}`;
-    this._logger.log(`Loading config from ${filePath}...`);
-    if (home && existsSync(filePath)) {
+    
+    const filePath = this._findConfigFilePath();
+    if (filePath) {
+      this._logger.log(`Config file: ${filePath}...`);
       const content = readFileSync(filePath, { encoding: "utf-8" });
-      this._logger.log(`Config file found.`);
       this._data = JSON.parse(content) as Data;
     } else {
       this._logger.log(Logger.toYellow("Config file not found"));
       this._data = undefined;
     }
     this._args = args;
+  }
+
+  private _findConfigFilePath() : string | undefined{
+    const userEnv = process.env.USER;
+    this._logger.log(`User: ${!userEnv ? "?" : userEnv}`);
+    const user = userEnv || "no-user";
+
+    const home = `/home/${user}`;
+    this._logger.log(`Home directory: ${!home ? "?" : home}`);
+
+    const tries = [
+      `${Config.CONFIG_FILE_NAME}`,
+      `${sep}home${sep}${user}${sep}${Config.CONFIG_FILE_NAME}`,
+      `${homedir()}${sep}${Config.CONFIG_FILE_NAME}`
+    ];
+
+    const filePath = tries.find(t => {
+      const exists = existsSync(t);
+      const access = this._canRead(t);
+      const exMsg = exists ? Logger.toGreen("found") : Logger.toRed("not found");
+      const acMsg = access ? Logger.toGreen("readable") : Logger.toRed("not readable");
+      this._logger.log(`Look up config: ${t} (${exMsg}) (${acMsg})`);
+      return exists && access;
+    });
+    return filePath;
+  }
+
+  private _canRead(path: string) : boolean {
+    try{
+      const access = accessSync(path, constants.R_OK);
+      return true;
+    }
+    catch (err) {
+      return false;
+    }
   }
 
   get logger(): Logger {

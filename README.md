@@ -1,14 +1,33 @@
 
 # For End-Users
 
+## Fast instructions
+
+Use `--help` option for instructions.
+```
+$ gitlab-cli --help
+```
+
+A brief example to see your projects:
+```
+$ gitlab-cli --token XXXXX --url https://gitlab.mycompany.com projects
+ - [id:1] : projectA - group1/projectA
+ - [id:2] : projectB - group2/projectB
+
+```
+
 ## Configuration (Optional)
 
-You can create a `$HOME/.gitlab-cli` file to store the URL and token. Then, you can use
-then options `--auto-token` and/or `--auto-url` avoid exposing sensitive data in command line.
+You can create the file `.gitlab-cli` (in the current directory) or a
+`$HOME/.gitlab-cli` (in your home directory) to store the GitLab URL and your personel token. 
+Once configured this way, you can use the options 
+`--auto-token` and/or `--auto-url` avoid exposing sensitive data in command line.
+
+The file should follow the JSON syntax:
 ```
 {
     "token": "yadayadayada",
-    "url": "https://mygitlab.com"
+    "url": "https://gitlab.mycompany.com"
 }
 ```
 
@@ -19,6 +38,7 @@ $ gitlab-cli --auto-token --auto-url projects --n 2
  - [id:2] : projectB - group2/projectB
 ```
 
+*Tip*: Do not grant read access for this file (`.gitlab-cli`) to other users...
 
 # For Developers
 
@@ -36,4 +56,12 @@ $ npx tsc && node build/main.js --help
 $ npx tsc && node build/main.js --help
 $ npx tsc && node build/main.js --token XXXXX --url https://git.tecgraf.puc-rio.br opened-issues --verbose --project-name my-project
 $ npx tsc && node build/main.js release-notes --token XXXXX --url https://git.tecgraf.puc-rio.br --project-name my-project --verbose --milestone-name my-milestone
+```
+
+## Snap Publish
+```
+$ snapcraft login
+$ snapcraft push gitlab-cli_<version>_<arch>.snap
+$ snapcraft status gitlab-cli
+$ snapcraft list-revisions gitlab-cli
 ```
