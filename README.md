@@ -1,13 +1,10 @@
 
-## Start Playing...
-```
-$ npm i
-$ npx tsc && node build/main.js --help
-```
+# For End-Users
+
+## Configuration (Optional)
 
 You can create a `$HOME/.gitlab-cli` file to store the URL and token. Then, you can use
 then options `--auto-token` and/or `--auto-url` avoid exposing sensitive data in command line.
-
 ```
 {
     "token": "yadayadayada",
@@ -17,10 +14,22 @@ then options `--auto-token` and/or `--auto-url` avoid exposing sensitive data in
 
 Example:
 ```
-$ npx tsc && node build/main.js --auto-token --auto-url projects
+$ gitlab-cli --auto-token --auto-url projects --n 2
  - [id:1] : projectA - group1/projectA
  - [id:2] : projectB - group2/projectB
- ```
+```
+
+
+# For Developers
+
+## Start Playing...
+```
+$ git clone https://github.com/andreclinio/gitlab-cli
+$ cd gitlab-cli
+$ npm i
+$ npx tsc && node build/main.js --help
+```
+
 
 ## Examples (DEV mode)
 ```

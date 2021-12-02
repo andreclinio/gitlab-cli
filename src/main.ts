@@ -87,11 +87,14 @@ yargs(hideBin(process.argv))
     "projects",
     "see projects (user is a member)",
     // tslint:disable-next-line:no-empty
-    (_args) => {},
+    (args) => {
+      addQuantityOption(args);
+    },
     (argv) => {
       const config = new Config(argv);
       const httpClient = config.createHttpClient();
-      const projects$ = httpClient.getProjects();
+      const quantity = config.getQuantity();
+      const projects$ = httpClient.getProjects(quantity);
       projects$.subscribe({
         next: (projects) => {
           projects.forEach((p) =>
@@ -350,4 +353,9 @@ yargs(hideBin(process.argv))
   .strict()
   // .option('command', { description: "command to be executed", choices: ["release-notes", "opened-issues"]})
   // Useful aliases.
-  .help().argv;
+  .help()
+  .version()
+  .demandCommand().recommendCommands()
+  .showHelpOnFail(true)
+  .epilogue(`For more information, check out the documentation at https://github.com/andreclinio/gitlab-cli`)
+  .argv;

@@ -34,8 +34,9 @@ export class HttpClient {
     });
   }
 
-  public getProjects(): Observable<Project[]> {
-    const path = `/projects?per_page=100&order_by=name&sort=asc&membership=true`;
+  public getProjects(quantity?: number): Observable<Project[]> {
+    const card = quantity ? quantity : 100;
+    const path = `/projects?per_page=${card}&order_by=name&sort=asc&membership=true`;
     const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe(
       map((ax) => ax.data)
     );

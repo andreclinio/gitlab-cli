@@ -30,14 +30,16 @@ export class Config {
 
   constructor(args: yargs.Arguments) {
     this._logger = new Logger(args.verbose as boolean);
-    this._logger.log(`Loading config...`);
     const home = process.env.HOME;
+    this._logger.log(`Home directory is: ${!home ? "???" : home}`);
     const filePath = `${home}/${Config.CONFIG_FILE_NAME}`;
-    if (fs.existsSync(filePath)) {
+    this._logger.log(`Loading config from ${filePath}...`);
+    if (home && fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, { encoding: "utf-8" });
-      this._logger.log(`Config file found at ${filePath}`);
+      this._logger.log(`Config file found.`);
       this._data = JSON.parse(content) as Data;
     } else {
+      this._logger.log(Logger.toYellow("Config file not found"));
       this._data = undefined;
     }
     this._args = args;
@@ -72,7 +74,11 @@ export class Config {
       this._logger.print("Token not found!");
       exit(1);
     }
-    this._logger.log(`token: ${token}`);
+    const n = 2;
+    const prefixToken = token.substring(0, n);
+    const sufixToken = token.substring(token.length - n , token.length);
+    const warn = Logger.toYellow("(partially ommited for security reasons)");
+    this._logger.log(`token: ${prefixToken}...${sufixToken} ${warn}`);
     return token;
   }
 
