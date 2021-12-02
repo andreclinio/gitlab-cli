@@ -1,9 +1,9 @@
 name: gitlab-cli # you probably want to 'snapcraft register <name>'
 base: core20 # the base snap is the execution environment for this snap
 version: git # just for humans, typically '1.2+git' or '1.3.2'
-summary: Gitlab CLI simple interface # 79 char long summary
+summary: GitLab CLI simple interface # 79 char long summary
 description: |
-  Gitlab CLI simple interface. 
+  GitLab CLI simple interface. 
 
 grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: devmode # use 'strict' once you have the right plugs and slots
@@ -12,13 +12,18 @@ apps:
   gitlab-cli:
     command: bin/gitlab-cli
     plugs:
-      - dot-file
+      - configuration
+      - internet
 
 plugs:
-  dot-file:
-    interface: personal-files
-    read:
-      - $HOME/.gitlab-cli
+  configuration:
+    description: "access to the $HOME/.gitlab-cli configuration file"
+    name: "personel configuration file"
+    interface: home
+  internet:
+    description: "access the internet to get remote GitLab resources"
+    name: "network connection"
+    interface: network
 
 parts:
   gitlab-cli:
