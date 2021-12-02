@@ -17,12 +17,8 @@ apps:
 
 plugs:
   configuration:
-    description: "access to the $HOME/.gitlab-cli configuration file"
-    name: "personel configuration file"
     interface: home
   internet:
-    description: "access the internet to get remote GitLab resources"
-    name: "network connection"
     interface: network
 
 parts:
