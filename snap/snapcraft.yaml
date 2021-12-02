@@ -11,6 +11,14 @@ confinement: devmode # use 'strict' once you have the right plugs and slots
 apps:
   gitlab-cli:
     command: bin/gitlab-cli
+    plugs:
+      - dot-file
+
+plugs:
+  dot-file:
+    interface: personal-files
+    read:
+      - $HOME/.gitlab-cli
 
 parts:
   gitlab-cli:
