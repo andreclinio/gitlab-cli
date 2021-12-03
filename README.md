@@ -1,7 +1,15 @@
 
 # For End-Users
 
-## Fast instructions
+## Install
+
+The first option is SNAP. Try the `snap` command to install or to update the program.
+```
+$ sudo snap install gitlab-cli --edge --devmode
+$ sudo snap refresh gitlab-cli --edge --devmode
+```
+
+## Usage (Fast Instructions)
 
 Use `--help` option for instructions.
 ```
@@ -61,7 +69,7 @@ $ npx tsc && node build/main.js release-notes --token XXXXX --url https://git.te
 ## Snap Publish
 ```
 $ snapcraft login
-$ snapcraft push gitlab-cli_<version>_<arch>.snap
+$ snapcraft upload gitlab-cli_<version>_<arch>.snap
 $ snapcraft status gitlab-cli
 $ snapcraft list-revisions gitlab-cli
 ```
