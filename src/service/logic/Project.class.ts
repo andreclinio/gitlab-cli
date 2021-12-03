@@ -14,6 +14,10 @@ export class Project extends Holder<JsonProject> {
     return this.data.name;
   }
 
+  get path(): string {
+    return this.data.path;
+  }
+
   get description(): string {
     return this.data.description ? this.data.description : "(no description)";
   }
@@ -35,7 +39,7 @@ export class Project extends Holder<JsonProject> {
   }
 
   toString() : string {
-    return `[project #${this.id}] ${this.name} [${this.path_with_namespace}]`;
+    return `[project #${this.id}] ${this.path} [${this.path_with_namespace}]`;
   }
 }
 

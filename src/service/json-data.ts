@@ -3,6 +3,7 @@ export interface JsonIssue {
   iid: number;
   title: string;
   state: string;
+  due_date: string;
 }
 
 export interface JsonMilestone {
@@ -19,6 +20,7 @@ export interface JsonProject {
   id: number;
   name: string;
   description: string;
+  path: string;
   path_with_namespace: string;
   default_branch: string;
   ssh_url_to_repo: string;

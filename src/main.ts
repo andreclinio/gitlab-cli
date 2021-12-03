@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+import { assert } from "console";
 import { mergeMap } from "rxjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Config } from "./config";
 import { Logger } from "./logger";
+import { Issue, IssueState } from "./service/logic/Issue.class";
 
 function addPnaOption(argv: yargs.Argv): yargs.Argv {
   return argv.option(Config.PNA_TAG, {
@@ -92,32 +94,72 @@ yargs(hideBin(process.argv))
     // tslint:disable-next-line:no-empty
     (args) => {
       addQuantityOption(args);
+      args.option({
+        "name-match": {
+          demandOption: false,
+          type: "string",
+          description: "Show only projects with name match",
+        },
+      });
     },
     (argv) => {
       const config = new Config(argv);
       const gitlabService = config.createService();
       const quantity = config.getQuantity();
-      const projects$ = gitlabService.getProjects(quantity);
+      const nameMatch = config.getExtraStringValue("name-match");
+      const projects$ = gitlabService.getProjects(quantity, nameMatch);
       projects$.subscribe({
-        next: (projects) => projects.forEach((p) => config.logger.printItem(p.toString())),
+        next: (projects) => {
+          projects.forEach((p) => config.logger.printItem(p.toString()));
+          config.logger.print(`${projects.length} project(s)`);
+        },
         error: (err) => config.logger.exit(err)
       });
     }
   )
 
   .command(
-    `opened-issues`,
-    "see opened issues",
+    `issues`,
+    "see issues",
     (argv) => {
       addPnaOption(argv);
+      addQuantityOption(argv);
+      argv.option({
+        "opened": {
+          default: false,
+          demandOption: false,
+          type: "boolean",
+          description: "Show only opened issues",
+        },
+      });
+      argv.option({
+        "closed": {
+          default: false,
+          demandOption: false,
+          type: "boolean",
+          description: "Show only closed issues",
+        },
+      });
     },
     (argv) => {
       const config = new Config(argv);
       const gitlabService = config.createService();
       const projectName = config.getPna();
-      const issues$ = gitlabService.getOpenedIssues(projectName);
+      const quantity = config.getQuantity();
+      const onlyClosed = config.getExtraBooleanValue("closed");
+      const onlyOpened = config.getExtraBooleanValue("opened");
+      let issues$;
+      if (onlyClosed && !onlyOpened)
+        issues$ = gitlabService.getIssuesWithState(projectName, IssueState.CLOSED, quantity);
+      else if (!onlyClosed && onlyOpened)
+        issues$ = gitlabService.getIssuesWithState(projectName, IssueState.OPENED, quantity);
+      else
+        issues$ = gitlabService.getAllIssues(projectName, quantity);
       issues$.subscribe({
-        next: (issues) => issues.forEach((i) => config.logger.printItem(i.toString())),
+        next: (issues) => {
+          issues.forEach((i) => config.logger.printItem(i.toString()));
+          config.logger.print(`${issues.length} issue(s)`);
+        },
         error: (err) => config.logger.exit(err)
       });
     }
@@ -156,8 +198,8 @@ yargs(hideBin(process.argv))
       const config = new Config(args);
       const gitlabService = config.createService();
       const projectName = config.getPna();
-      const releaseNa = config.getRna();
-      const issues$ = gitlabService.getReleaseIssues(projectName, releaseNa);
+      const releaseName = config.getRna();
+      const issues$ = gitlabService.getReleaseIssues(projectName, releaseName);
       issues$.subscribe({
         next: (issues) => {
           issues.forEach((i) =>

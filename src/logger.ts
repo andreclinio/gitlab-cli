@@ -32,7 +32,7 @@ export class Logger implements GitlabLogger {
   }
 
   print(text: string): void {
-    this.toConsole(`[OUT]: ${text}`);
+    this.toConsole(`${text}`);
   }
 
   printItem(text: string, level?: number): void {

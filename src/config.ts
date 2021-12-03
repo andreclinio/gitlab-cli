@@ -98,6 +98,12 @@ export class Config {
     return value;
   }
 
+  public getExtraStringValue(tag: string): string {
+    const value = this._args[tag] as string;
+    this._logger.log(`${tag} (string): ${value}`);
+    return value;
+  }
+
   public getExtraNumberValue(tag: string): number | undefined {
     const value = this._args[tag] ? (this._args[tag] as number) : undefined;
     this._logger.log(`${tag} (number): ${value}`);

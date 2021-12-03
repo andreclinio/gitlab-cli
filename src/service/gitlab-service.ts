@@ -5,7 +5,7 @@ import { forkJoin, from, map, mergeAll, mergeMap, Observable, of, throwError } f
 import { Logger } from "../logger";
 import { JsonIssue, JsonMilestone, JsonPipeline, JsonProject, JsonRelease, JsonTag } from "./json-data";
 import { Project } from "./logic/Project.class";
-import { Issue } from "./logic/Issue.class";
+import { Issue, IssueState } from "./logic/Issue.class";
 import { Milestone } from "./logic/Milestone.class";
 import { Pipeline } from "./logic/Pipeline.class";
 import { Release } from "./logic/Release.class";
@@ -25,9 +25,10 @@ export class GitlabService {
     this.instance = axios.create({ baseURL });
   }
 
-  public getProjects(quantity?: number): Observable<Project[]> {
+  public getProjects(quantity?: number, search?: string): Observable<Project[]> {
     const card = quantity ? quantity : 100;
-    const path = `/projects?per_page=${card}&order_by=name&sort=asc&membership=true`;
+    let path = `/projects?per_page=${card}&order_by=name&sort=asc&membership=true`;
+    if (search) path += `&search=${search}`;
     const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe(
       map((ax) => ax.data)
     );
@@ -37,9 +38,15 @@ export class GitlabService {
     return projects$;
   }
 
-  public getOpenedIssues(projectName: string): Observable<Issue[]> {
+  public getAllIssues(projectName: string, quantity?: number): Observable<Issue[]> {
     const project$ = this._getProjectByName(projectName);
-    const issues$ = project$.pipe(mergeMap((p) => this._getOpenedIssues(p.id)));
+    const issues$ = project$.pipe(mergeMap((p) => this._getAllIssues(p.id, quantity)));
+    return issues$;
+  }
+
+  public getIssuesWithState(projectName: string, state: IssueState, quantity?: number): Observable<Issue[]> {
+    const project$ = this._getProjectByName(projectName);
+    const issues$ = project$.pipe(mergeMap((p) => this._getIssuesWithState(p.id, state, quantity)));
     return issues$;
   }
 
@@ -66,9 +73,13 @@ export class GitlabService {
   }
 
   public getMilestoneIssues(projectName: string, milestoneName: string): Observable<Issue[]> {
-    const x$ = this._getMilestoneByNames(projectName, milestoneName);
-    const issues$ = x$.pipe(
-      mergeMap((x) => this._getMilestoneIssues(x[0].id, x[1].id))
+    const pm$ = this._getMilestoneByNames(projectName, milestoneName);
+    const issues$ = pm$.pipe(
+      mergeMap((pm) => {
+        const projectId = pm[0].id;
+        const milestoneId = pm[1].id;
+        return this._getMilestoneIssues(projectId, milestoneId);
+      })
     );
     return issues$;
   }
@@ -185,26 +196,39 @@ export class GitlabService {
   }
 
   private _getProjectByName(projectName: string): Observable<Project> {
-    const projects$ = this.getProjects();
-    const project$ = projects$.pipe(map((ps) => ps.find((p) => p.name === projectName)));
+    const projects$ = this.getProjects(undefined, projectName);
+    const project$ = projects$.pipe(map((ps) => ps.find((p) => p.path === projectName)));
     const error$ = throwError(() => new Error(`project ${projectName} not found`));
     const result$ = project$.pipe(mergeMap((p) => p ? of(p) : error$));
     return result$;
   }
 
-  private _getOpenedIssues(projectId: number): Observable<Issue[]> {
-    const path = `/projects/${projectId}/issues`;
+  private _getIssuesWithState(projectId: number, state: IssueState, quantity?: number): Observable<Issue[]> {
+    const card = quantity ? quantity : 100;
+    const path = `/projects/${projectId}/issues?per_page=${card}&state=${state.toString()}&order_by=created_at`;
     const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
     const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
-    const opened$ = issues$.pipe(map((issues) => issues.filter((i) => i.state === "opened")));
-    return opened$;
+    const filtered$ = issues$.pipe(map((issues) => issues.filter((i) => i.state === state)));
+    const results$ = state ? filtered$ : issues$;
+    return results$;
+
   }
 
-  private _getMilestoneIssues(projectId: number, milestoneId: number): Observable<Issue[]> {
-    const path = `/projects/${projectId}/milestones/${milestoneId}/issues`;
+  private _getAllIssues(projectId: number, quantity?: number): Observable<Issue[]> {
+    const card = quantity ? quantity : 100;
+    const path = `/projects/${projectId}/issues?per_page=${card}&order_by=created_at`;
     const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
     const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
     return issues$;
+  }
+
+  private _getMilestoneIssues(projectId: number, milestoneId: number): Observable<Issue[]> {
+    // Este endpoint não permite o sort. Logo, a ordenação é feita no método.
+    const path = `/projects/${projectId}/milestones/${milestoneId}/issues`;
+    const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
+    const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
+    const sorted$ = issues$.pipe( map( is => is.sort( (i1, i2) => i1.id < i2.id ? 1 : -1)));
+    return sorted$;
   }
 
   private mountUrl(path: string): string {

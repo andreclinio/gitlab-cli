@@ -32,7 +32,7 @@ export class Release extends Holder<JsonRelease> {
   }
 
   get milestones(): Milestone[] {
-    const ms = this.data.milestones;
+    const ms = this.data.milestones || [];
     const milestones = ms.map((m) => new Milestone(m));
     return milestones;
   }
@@ -44,6 +44,6 @@ export class Release extends Holder<JsonRelease> {
   }
 
   toString() : string {
-    return `[release ${this.name}] ${this.description} (${Logger.dthr(this.released_at)})`;
+    return `[release ${this.name}] (${Logger.dthr(this.released_at)})`;
   }
 }
