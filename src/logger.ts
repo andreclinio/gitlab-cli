@@ -2,13 +2,14 @@ import { Moment } from "moment";
 import { GitlabLogger } from "./service/gitlab-logger.class";
 
 export class Logger implements GitlabLogger {
-  
+
   private readonly verbose: boolean;
 
   public static readonly RED = "\x1b[31m";
   public static readonly YELLOW = "\x1b[33m";
   public static readonly GREEN = "\x1b[32m";
   public static readonly CYAN = "\x1b[36m";
+  public static readonly BOLD = "\x1b[1m";
   public static readonly RESET = "\x1b[0m";
 
   constructor(verbose: boolean) {
@@ -20,7 +21,7 @@ export class Logger implements GitlabLogger {
     if (!this.verbose) return;
     this.toConsole(`[LOG]: ${text}`);
   }
-  
+
   logUrl(url: string): void {
     this.log(`URL -> ${Logger.toCyan(url)}`);
   }
@@ -56,10 +57,23 @@ export class Logger implements GitlabLogger {
     return `${Logger.CYAN}${text}${Logger.RESET}`;
   }
 
+  static toBold(text: string): string {
+    return `${Logger.BOLD}${text}${Logger.RESET}`;
+  }
+
   static dthr(moment: Moment): string {
     if (!moment) return "?";
     return `${moment.format("DD/MM/YYYY HH:mm:ss")}`;
   }
+
+  static presentation() {
+    const text = "\n" +
+      Logger.toBold("GitLab CLI - Command line interface\n") +
+      "Author: André Luiz Clinio (andre.clinio@gmail.com)";
+    // tslint:disable-next-line:no-console
+    console.info(text);
+  }
+
 
   private toConsole(text: string): void {
     // tslint:disable-next-line:no-console

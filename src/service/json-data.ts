@@ -40,7 +40,21 @@ export interface JsonRelease {
   created_at: string;
   released_at: string;
   milestones: JsonMilestone[];
+  assets: JsonReleaseAssets;
 }
+
+export interface JsonReleaseAssetLink {
+  id: number;
+  name: string;
+  url: string;
+  external: boolean;
+  link_type: string;
+}
+
+export interface JsonReleaseAssets {
+  links: JsonReleaseAssetLink[];
+}
+
 
 export interface JsonCommit {
   id: string;
@@ -55,3 +69,4 @@ export interface JsonTag {
   target: string;
   commit: JsonCommit;
 }
+

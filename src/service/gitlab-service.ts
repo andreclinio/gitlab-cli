@@ -6,7 +6,7 @@ import { Logger } from "../logger";
 import { JsonIssue, JsonMilestone, JsonPipeline, JsonProject, JsonRelease, JsonTag } from "./json-data";
 import { Project } from "./logic/Project.class";
 import { Issue } from "./logic/Issue.class";
-import { Milestone } from "./logic/MIlestone.class";
+import { Milestone } from "./logic/Milestone.class";
 import { Pipeline } from "./logic/Pipeline.class";
 import { Release } from "./logic/Release.class";
 import { Tag } from "./logic/Tag.class";
@@ -14,7 +14,7 @@ import { GitlabLogger } from "./gitlab-logger.class";
 
 
 export class GitlabService {
-  
+
   private readonly instance: AxiosInstance;
   private readonly token: string;
   private readonly logger: GitlabLogger;
@@ -51,12 +51,10 @@ export class GitlabService {
     return milestones$;
   }
 
-  public getSucessfulPipelineOfTag(projectName: string, tagName: string): Observable<Pipeline | undefined> {
-    const pipelines$ = this.getPipelines(projectName);
-    const pipeline$ = pipelines$.pipe(
-      map((ps) => ps.find((p) => p.success && p.ref === tagName))
-    );
-    return pipeline$;
+  public getReleaseByNames(projectName: string, releaseName: string): Observable<Release> {
+    const projectRelease$ = this._getReleaseByNames(projectName, releaseName);
+    const release$ = projectRelease$.pipe(map((pr) => pr[1]));
+    return release$;
   }
 
   public getPipelines(projectName: string, quantity?: number): Observable<Pipeline[]> {
@@ -163,7 +161,7 @@ export class GitlabService {
     const path = `/projects/${projectId}/releases?per_page=${card}`;
     const jsonReleases$ = from(this.mountGetRequest<JsonRelease[]>(path)).pipe(map((ax) => ax.data));
     const releases$ = jsonReleases$.pipe(map((jrs) => jrs.map((jr) => new Release(jr))));
-    const compareFn = (r1: Release, r2: Release) => (r1.released_at.isBefore(r2.released_at) ? 1 : 1);
+    const compareFn = (r1: Release, r2: Release) => (r1.released_at.isBefore(r2.released_at) ? -1 : 1);
     const ordered$ = releases$.pipe(map((rs) => rs.sort(compareFn)));
     return ordered$;
   }
@@ -181,7 +179,7 @@ export class GitlabService {
     const path = `/projects/${projectId}/repository/tags?per_page=${card}`;
     const jsonTags$ = from(this.mountGetRequest<JsonTag[]>(path)).pipe(map((ax) => ax.data));
     const tags$ = jsonTags$.pipe(map((jts) => jts.map((jt) => new Tag(jt))));
-    const compareFn = (t1: Tag, t2: Tag) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? -1 : 1;
+    const compareFn = (t1: Tag, t2: Tag) => t1.commit.commited_at.isBefore(t2.commit.commited_at) ? 1 : -1;
     const ordered$ = tags$.pipe(map((ts) => ts.sort(compareFn)));
     return ordered$;
   }

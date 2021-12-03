@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { mergeMap } from "rxjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Config } from "./config";
@@ -52,6 +53,7 @@ function addQuantityOption(argv: yargs.Argv): yargs.Argv {
   });
 }
 
+Logger.presentation();
 
 // tslint:disable-next-line:no-unused-expression
 yargs(hideBin(process.argv))
@@ -245,6 +247,37 @@ yargs(hideBin(process.argv))
   )
 
   .command(
+    `release`,
+    "see project release details",
+    (argv) => {
+      addPnaOption(argv);
+      addRnaOption(argv);
+      addQuantityOption(argv);
+    },
+    (args) => {
+      const config = new Config(args);
+      const gitlabService = config.createService();
+      const projectName = config.getPna();
+      const relasesName = config.getRna();
+      const release$ = gitlabService.getReleaseByNames(projectName, relasesName);
+      release$.subscribe({
+        next: (release) => {
+            config.logger.printItem(`[${release.name}] ${release.description} - ${Logger.dthr(release.released_at)}`);
+            config.logger.printItem(`tag: ${release.tag_name}`, 2);
+            const milestones = release.milestones;
+            milestones.forEach((m) => config.logger.printItem(`milestone: ${m.title} (${m.stateText})`, 2));
+            const assets = release.assets;
+            const links = assets.links;
+            links.forEach((l) => config.logger.printItem(`link: ${l.name} - ${Logger.toCyan(l.url)}`, 2));
+        },
+        error: (err) => {
+          config.logger.exit(err);
+        },
+      });
+    }
+  )
+
+  .command(
     `pipelines`,
     "see project pipelines",
     (argv) => {
@@ -287,22 +320,8 @@ yargs(hideBin(process.argv))
         next: (tags) => {
           tags.forEach((t) => {
             const tagName = t.name;
-            const pipeline$ = gitlabService.getSucessfulPipelineOfTag(projectName, tagName);
-            pipeline$.subscribe({
-              next: (pipeline) => {
-                config.logger.printItem(`[${tagName}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
-                if (pipeline) {
-                  config.logger.printItem(`[Pipeline: #${pipeline.id}] - ${pipeline.statusText} - ${Logger.dthr(pipeline.created_at)}`, 2);
-                }
-                else {
-                  config.logger.printItem(`[No pipeline]`, 2);
-                }
-              },
-              error: (err) => {
-                config.logger.exit(err);
-              },
-            });
-          });
+            config.logger.printItem(`[${tagName}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
+          })
         },
         error: (err) => {
           config.logger.exit(err);
