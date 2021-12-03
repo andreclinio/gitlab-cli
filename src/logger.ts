@@ -1,6 +1,8 @@
 import { Moment } from "moment";
+import { GitlabLogger } from "./service/gitlab-logger.class";
 
-export class Logger {
+export class Logger implements GitlabLogger {
+  
   private readonly verbose: boolean;
 
   public static readonly RED = "\x1b[31m";
@@ -17,6 +19,10 @@ export class Logger {
   log(text: string): void {
     if (!this.verbose) return;
     this.toConsole(`[LOG]: ${text}`);
+  }
+  
+  logUrl(url: string): void {
+    this.log(`URL -> ${Logger.toCyan(url)}`);
   }
 
   exit(text: string) {
