@@ -72,4 +72,8 @@ export class Pipeline extends Holder<JsonPipeline> {
     else if (this.running) return Logger.toCyan(status);
     else return status;
   }
+
+  toString() : string {
+    return `[pipeline #${this.id}] ${this.ref} - ${Logger.dthr(this.created_at)} (${this.statusText}) - ${this.sha_resumed}`;
+  }
 }

@@ -99,12 +99,8 @@ yargs(hideBin(process.argv))
       const quantity = config.getQuantity();
       const projects$ = gitlabService.getProjects(quantity);
       projects$.subscribe({
-        next: (projects) => {
-          projects.forEach((p) => config.logger.printItem(`[id:${p.id}] : ${p.name} - ${p.path_with_namespace}`));
-        },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        next: (projects) => projects.forEach((p) => config.logger.printItem(p.toString())),
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -121,14 +117,8 @@ yargs(hideBin(process.argv))
       const projectName = config.getPna();
       const issues$ = gitlabService.getOpenedIssues(projectName);
       issues$.subscribe({
-        next: (issues) => {
-          issues.forEach((i) =>
-            config.logger.printItem(`[#${i.iid}] - ${i.title}`)
-          );
-        },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        next: (issues) => issues.forEach((i) => config.logger.printItem(i.toString())),
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -148,13 +138,9 @@ yargs(hideBin(process.argv))
       const issues$ = gitlabService.getMilestoneIssues(projectName, milestoneName);
       issues$.subscribe({
         next: (issues) => {
-          issues.forEach((i) => {
-            config.logger.printItem(`[#${i.iid}] (${i.stateText}) - ${i.title} `);
-          });
+          issues.forEach((i) => config.logger.printItem(i.toString()));
         },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -174,13 +160,11 @@ yargs(hideBin(process.argv))
       const issues$ = gitlabService.getReleaseIssues(projectName, releaseNa);
       issues$.subscribe({
         next: (issues) => {
-          issues.forEach((i) => {
-            config.logger.printItem(`[#${i.iid}] (${i.stateText}) - ${i.title} `);
-          });
+          issues.forEach((i) =>
+            config.logger.printItem(i.toString())
+          )
         },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -208,12 +192,8 @@ yargs(hideBin(process.argv))
       const onlyActive = config.getExtraBooleanValue("only-active");
       const milestones$ = gitlabService.getMilestones(projectId, onlyActive, quantity);
       milestones$.subscribe({
-        next: (milestones) => {
-          milestones.forEach((m) => config.logger.printItem(`[id:${m.id}] (${m.stateText}) - ${m.title}`));
-        },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        next: (milestones) => milestones.forEach((m) => config.logger.printItem(m.toString())),
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -234,9 +214,9 @@ yargs(hideBin(process.argv))
       releases$.subscribe({
         next: (releases) => {
           releases.forEach((r) => {
-            config.logger.printItem(`[${r.name}] tag: ${r.tag_name} - ${r.description} - ${Logger.dthr(r.released_at)}`);
+            config.logger.printItem(r.toString());
             const milestones = r.milestones;
-            milestones.forEach((m) => config.logger.printItem(`[milestone: #${m.id}] (${m.stateText}) - ${m.title}`, 2));
+            milestones.forEach((m) => config.logger.printItem(m.toString(), 2));
           });
         },
         error: (err) => {
@@ -262,17 +242,15 @@ yargs(hideBin(process.argv))
       const release$ = gitlabService.getReleaseByNames(projectName, relasesName);
       release$.subscribe({
         next: (release) => {
-            config.logger.printItem(`[${release.name}] ${release.description} - ${Logger.dthr(release.released_at)}`);
-            config.logger.printItem(`tag: ${release.tag_name}`, 2);
-            const milestones = release.milestones;
-            milestones.forEach((m) => config.logger.printItem(`milestone: ${m.title} (${m.stateText})`, 2));
-            const assets = release.assets;
-            const links = assets.links;
-            links.forEach((l) => config.logger.printItem(`link: ${l.name} - ${Logger.toCyan(l.url)}`, 2));
+          config.logger.printItem(release.toString());
+          config.logger.printItem(`tag: ${release.tag_name}`, 2);
+          const milestones = release.milestones;
+          milestones.forEach((m) => config.logger.printItem(m.toString(), 2));
+          const assets = release.assets;
+          const links = assets.links;
+          links.forEach((l) => config.logger.printItem(l.toString(), 2));
         },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -292,13 +270,9 @@ yargs(hideBin(process.argv))
       const pipelines$ = gitlabService.getPipelines(projectName, quantity);
       pipelines$.subscribe({
         next: (pipelines) => {
-          pipelines.forEach((p) => {
-            config.logger.printItem(`[${p.id}] (${p.statusText}) - ${p.ref} - ${Logger.dthr(p.created_at)} :: ${p.sha_resumed}`);
-          });
+          pipelines.forEach((p) => config.logger.printItem(p.toString()));
         },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        error: (err) => config.logger.exit(err)
       });
     }
   )
@@ -317,15 +291,8 @@ yargs(hideBin(process.argv))
       const projectName = config.getPna();
       const tags$ = gitlabService.getTags(projectName, quantity);
       tags$.subscribe({
-        next: (tags) => {
-          tags.forEach((t) => {
-            const tagName = t.name;
-            config.logger.printItem(`[${tagName}] - ${t.message} - ${Logger.dthr(t.commit.commited_at)}`);
-          })
-        },
-        error: (err) => {
-          config.logger.exit(err);
-        },
+        next: (tags) => tags.forEach((t) => config.logger.printItem(t.toString())),
+        error: (err) => config.logger.exit(err)
       });
     }
   )

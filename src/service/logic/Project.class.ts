@@ -33,5 +33,9 @@ export class Project extends Holder<JsonProject> {
   get ssh_url_to_repo(): string {
     return this.data.ssh_url_to_repo;
   }
+
+  toString() : string {
+    return `[project #${this.id}] ${this.name} [${this.path_with_namespace}]`;
+  }
 }
 

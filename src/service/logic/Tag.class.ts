@@ -1,3 +1,4 @@
+import { Logger } from "../../logger";
 import { JsonTag } from "../json-data";
 import { Commit } from "./Commit.class";
 import { Holder } from "./Holder.class";
@@ -19,6 +20,10 @@ export class Tag extends Holder<JsonTag> {
     const c = this.data.commit;
     const commit = new Commit(c);
     return commit;
+  }
+
+  toString() : string {
+    return `[tag ${this.name}] ${this.message} :: ${Logger.dthr(this.commit.commited_at)}`;
   }
 }
 

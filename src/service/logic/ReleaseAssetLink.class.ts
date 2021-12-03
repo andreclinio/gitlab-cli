@@ -1,3 +1,4 @@
+import { Logger } from "../../logger";
 import { JsonReleaseAssetLink } from "../json-data";
 import { Holder } from "./Holder.class";
 
@@ -23,6 +24,10 @@ export class ReleaseAssetLink extends Holder<JsonReleaseAssetLink> {
 
     get external(): boolean {
         return this.data.external;
+    }
+
+    toString(): string {
+        return `link: ${this.name} - ${Logger.toCyan(this.url)}`;
     }
 
 }

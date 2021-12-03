@@ -9,7 +9,10 @@ export interface JsonMilestone {
   id: number;
   iid: number;
   title: string;
+  description: string;
   state: string;
+  start_date: string;
+  due_date: string;
 }
 
 export interface JsonProject {

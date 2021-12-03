@@ -1,5 +1,6 @@
 import moment from "moment";
 import { Moment } from "moment";
+import { Logger } from "../../logger";
 import { JsonRelease } from "../json-data";
 import { Holder } from "./Holder.class";
 import { Milestone } from "./Milestone.class";
@@ -42,4 +43,7 @@ export class Release extends Holder<JsonRelease> {
     return assets;
   }
 
+  toString() : string {
+    return `[release ${this.name}] ${this.description} (${Logger.dthr(this.released_at)})`;
+  }
 }

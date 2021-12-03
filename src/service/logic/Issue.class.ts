@@ -37,4 +37,8 @@ export class Issue extends Holder<JsonIssue> {
   get title(): string {
     return this.data.title;
   }
+
+  toString() : string {
+    return `[issue #${this.iid}] ${this.title} - (${this.stateText})`;
+  }
 }
