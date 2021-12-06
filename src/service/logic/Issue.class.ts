@@ -67,7 +67,7 @@ export class Issue extends Holder<JsonIssue> {
 
   get timeText(): string {
     if (this.closed) return Logger.toGreen("closed");
-    const daysToEndTxt = Math.abs(this.daysToEnd) > 30 ? ">30" : this.daysToEnd;
+    const daysToEndTxt = Math.abs(this.daysToEnd) > 30 ? ">30" : this.daysToEnd.toFixed(0);
     if (this.late) return Logger.toRed(`late (${daysToEndTxt}d)`);
     return Logger.toYellow(`in time (${daysToEndTxt}d)`);
   }
