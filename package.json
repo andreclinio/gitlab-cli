@@ -17,9 +17,7 @@
     "url": "https://github.com/andreclinio/gitlab-cli.git"
   },
   "main": "main.js",
-  "bin": {
-    "gitlab-cli": "./build/main.js"
-  },
+  "bin": "./build/main.js",
   "scripts": {
     "test": "jest --config jestconfig.json",
     "package": "pkg . --output gitlab-cli",
