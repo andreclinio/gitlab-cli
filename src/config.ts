@@ -121,6 +121,7 @@ export class Config {
     const tries = [
       `${Config.CONFIG_FILE_NAME}`,
       `${sep}home${sep}${user}${sep}${Config.CONFIG_FILE_NAME}`,
+      `${sep}Users${sep}${user}${sep}${Config.CONFIG_FILE_NAME}`,
       `${homedir()}${sep}${Config.CONFIG_FILE_NAME}`
     ];
 
