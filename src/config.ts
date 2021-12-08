@@ -4,7 +4,7 @@ import { exit } from "process";
 import { Arguments } from "yargs";
 import { GitlabService } from "./service/gitlab-service";
 import { Logger } from "./logger";
-import { homedir } from "os";
+import { homedir, userInfo } from "os";
 import { sep } from "path";
 
 interface Data {
@@ -111,7 +111,7 @@ export class Config {
   }
 
   private _findConfigFilePath(): string | undefined {
-    const userEnv = process.env.USER;
+    const userEnv = process.env.USER || userInfo().username;
     this._logger.log(`User: ${!userEnv ? "?" : userEnv}`);
     const user = userEnv || "no-user";
 
