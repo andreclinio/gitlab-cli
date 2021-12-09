@@ -1,6 +1,6 @@
 {
   "name": "@andreclinio/gitlab-cli",
-  "version": "0.1.1-beta.9",
+  "version": "0.1.1-beta.10",
   "description": "Simple command line interface for GitLab",
   "keywords": [
     "git",
