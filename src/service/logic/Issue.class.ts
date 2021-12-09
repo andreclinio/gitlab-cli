@@ -39,8 +39,9 @@ export class Issue extends Holder<JsonIssue> {
     return assignees;
   }
 
-  get milestone(): Milestone {
+  get milestone(): Milestone | undefined {
     const m = this.data.milestone;
+    if (!m) return undefined;
     return new Milestone(m);
   }
 
@@ -77,8 +78,9 @@ export class Issue extends Holder<JsonIssue> {
   toString(detailed: boolean): string {
     let txt = `[issue #${this.iid}] ${this.title} [${this.stateText}]`;
     if (detailed) {
-      const assTxt = this.unassigned ? Logger.toYellow("assigned to nobody") : this.assignees.map(as => as.toString()).join(',');
-      txt += `\n[Assigned to: ${assTxt}] [Milestone: ${this.milestone.title} (${this.milestone.stateText})]`;
+      const assTxt = this.unassigned ? `[${Logger.toYellow("assigned to nobody")}]` : this.assignees.map(as => as.toString()).join(',');
+      txt += `\n[Assigned to: ${assTxt}] `;
+      txt += this.milestone ? `[Milestone: ${this.milestone.title} (${this.milestone.stateText})]` : `[${Logger.toYellow('No milestone')}]`;
       txt += `\n[${this.timeText}] [${this.labelsText}]`;
       txt += `\n[${Logger.toCyan(this.web_url)}]`;
       txt += "\n";
