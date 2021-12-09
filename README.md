@@ -75,8 +75,8 @@ $ npx tsc && node build/main.js --help
 ## Examples (DEV mode)
 ```
 $ npx tsc && node build/main.js --help
-$ npx tsc && node build/main.js --token XXXXX --url https://git.tecgraf.puc-rio.br opened-issues --verbose --project-name my-project
-$ npx tsc && node build/main.js release-notes --token XXXXX --url https://git.tecgraf.puc-rio.br --project-name my-project --verbose --milestone-name my-milestone
+$ npx tsc && node build/main.js --token XXXXX --url https://mygit.mycompany.com issues --opened --verbose --project-name my-project
+$ npx tsc && node build/main.js release-notes --token XXXXX --url https://mygit.mycompany.com --project-name my-project --verbose --milestone-name my-milestone
 ```
 
 ## Tag (version) Generation
