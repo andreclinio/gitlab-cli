@@ -95,14 +95,25 @@ $ npm run release-beta
 ```
 
 ## Snap Publish
+
+The `npm` command below is used only to remove snap files and rebuild the project.
+See the `package.json` file.
+
 ```
+$ npm run snapcraft
+$ 
 $ snapcraft login
 $ snapcraft upload gitlab-cli_<version>_<arch>.snap
 $ snapcraft status gitlab-cli
 $ snapcraft list-revisions gitlab-cli
+$ 
+$ rm -fr *.snap
 ```
 
 ## NPM Publish
+
+The `npm login` command below is needed only at first time.
+
 ```
 $ npm login
 $ npm publish --access public
