@@ -1,15 +1,14 @@
 {
   "name": "@andreclinio/gitlab-cli",
   "version": "0.1.1-beta.9",
-  "description": "GitLab command line viewer program",
+  "description": "Simple command line interface for GitLab",
   "keywords": [
     "git",
     "gitlab"
   ],
   "author": {
     "name": "André Luiz Clinio (andre.clinio@gmail.com)",
-    "email": "andre.clinio@gmail.com",
-    "url": "https://webtorrent.io"
+    "email": "andre.clinio@gmail.com"
   },
   "license": "ISC",
   "repository": {
