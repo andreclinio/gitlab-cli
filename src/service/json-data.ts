@@ -4,6 +4,17 @@ export interface JsonIssue {
   title: string;
   state: string;
   due_date: string;
+  closed_at: string;
+  labels: string[];
+  assignees: JsonIssueAssignee[];
+  web_url: string;
+  milestone: JsonMilestone;
+}
+
+export interface JsonIssueAssignee {
+  id: number;
+  name: string;
+  username: string;
 }
 
 export interface JsonMilestone {

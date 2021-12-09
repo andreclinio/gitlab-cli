@@ -1,7 +1,7 @@
 
 import { accessSync, constants, existsSync, readFileSync } from "fs";
 import { exit } from "process";
-import { Arguments } from "yargs";
+import yargs, { Arguments } from "yargs";
 import { GitlabService } from "./service/gitlab-service";
 import { Logger } from "./logger";
 import { homedir, userInfo } from "os";
@@ -27,6 +27,7 @@ export class Config {
   public static readonly TNA_TAG = "tag-name";
   public static readonly PNA_TAG = "project-name";
   public static readonly MNA_TAG = "milestone-name";
+  public static readonly DETAILS_TAG = "details";
 
   public static readonly QUANTITY_TAG = "quantity";
 
@@ -46,6 +47,64 @@ export class Config {
       this._data = undefined;
     }
     this._args = args;
+  }
+
+  static addPnaOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option(Config.PNA_TAG, {
+      type: "string",
+      alias: "pna",
+      demandOption: true,
+      description: "Set the project name",
+    });
+  }
+
+  static addRnaOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option(Config.RNA_TAG, {
+      type: "string",
+      alias: "rna",
+      demandOption: true,
+      description: "Set the release name",
+    });
+  }
+
+  static addTnaOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option(Config.TNA_TAG, {
+      type: "string",
+      alias: "tna",
+      demandOption: true,
+      description: "Set the tag name",
+    });
+  }
+
+  static addMnaOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option(Config.MNA_TAG, {
+      type: "string",
+      alias: "mna",
+      demandOption: true,
+      description: "Set the milestone name",
+    });
+  }
+
+  static addQuantityOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option({
+      quantity: {
+        alias: "n",
+        demandOption: false,
+        type: "number",
+        description: "Show only <n> items",
+      },
+    });
+  }
+
+  static addDetailsOption(argv: yargs.Argv): yargs.Argv {
+    return argv.option({
+      details: {
+        demandOption: false,
+        default: false,
+        type: "boolean",
+        description: "Show details",
+      },
+    });
   }
 
   get logger(): Logger {
@@ -84,6 +143,10 @@ export class Config {
     const quantity = data as number;
     this._logger.log(`quantity: ${quantity}`);
     return quantity;
+  }
+
+  public dumpDetails(): boolean {
+    return this.getExtraBooleanValue(Config.DETAILS_TAG);
   }
 
   public getMna(): string {

@@ -1,59 +1,11 @@
 #!/usr/bin/env node
 
-import { assert } from "console";
-import { mergeMap } from "rxjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Config } from "./config";
 import { Logger } from "./logger";
-import { Issue, IssueState } from "./service/logic/Issue.class";
+import { IssueState } from "./service/logic/Issue.class";
 
-function addPnaOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option(Config.PNA_TAG, {
-    type: "string",
-    alias: "pna",
-    demandOption: true,
-    description: "Set the project name",
-  });
-}
-
-function addRnaOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option(Config.RNA_TAG, {
-    type: "string",
-    alias: "rna",
-    demandOption: true,
-    description: "Set the release name",
-  });
-}
-
-function addTnaOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option(Config.TNA_TAG, {
-    type: "string",
-    alias: "tna",
-    demandOption: true,
-    description: "Set the tag name",
-  });
-}
-
-function addMnaOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option(Config.MNA_TAG, {
-    type: "string",
-    alias: "mna",
-    demandOption: true,
-    description: "Set the milestone name",
-  });
-}
-
-function addQuantityOption(argv: yargs.Argv): yargs.Argv {
-  return argv.option({
-    quantity: {
-      alias: "n",
-      demandOption: false,
-      type: "number",
-      description: "Show only <n> items",
-    },
-  });
-}
 
 Logger.presentation();
 
@@ -93,7 +45,7 @@ yargs(hideBin(process.argv))
     "see projects (user is a member)",
     // tslint:disable-next-line:no-empty
     (args) => {
-      addQuantityOption(args);
+      Config.addQuantityOption(args);
       args.option({
         "name-match": {
           demandOption: false,
@@ -122,8 +74,9 @@ yargs(hideBin(process.argv))
     `issues`,
     "see issues",
     (argv) => {
-      addPnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
+      Config.addDetailsOption(argv);
       argv.option({
         "opened": {
           default: false,
@@ -146,6 +99,7 @@ yargs(hideBin(process.argv))
       const gitlabService = config.createService();
       const projectName = config.getPna();
       const quantity = config.getQuantity();
+      const dumpSimple = config.dumpDetails();
       const onlyClosed = config.getExtraBooleanValue("closed");
       const onlyOpened = config.getExtraBooleanValue("opened");
       let issues$;
@@ -157,7 +111,7 @@ yargs(hideBin(process.argv))
         issues$ = gitlabService.getAllIssues(projectName, quantity);
       issues$.subscribe({
         next: (issues) => {
-          issues.forEach((i) => config.logger.printItem(i.toString()));
+          issues.forEach((i) => config.logger.printItem(i.toString(dumpSimple)));
           config.logger.print(`${issues.length} issue(s)`);
         },
         error: (err) => config.logger.exit(err)
@@ -169,18 +123,20 @@ yargs(hideBin(process.argv))
     `milestone-issues`,
     "see milestone issues",
     (argv) => {
-      addPnaOption(argv);
-      addMnaOption(argv);
+      Config.addPnaOption(argv);
+      Config.addMnaOption(argv);
+      Config.addDetailsOption(argv);
     },
     (args) => {
       const config = new Config(args);
       const milestoneName = config.getMna();
       const projectName = config.getPna();
+      const dumpSimple = config.dumpDetails();
       const gitlabService = config.createService();
       const issues$ = gitlabService.getMilestoneIssues(projectName, milestoneName);
       issues$.subscribe({
         next: (issues) => {
-          issues.forEach((i) => config.logger.printItem(i.toString()));
+          issues.forEach((i) => config.logger.printItem(i.toString(dumpSimple)));
         },
         error: (err) => config.logger.exit(err)
       });
@@ -191,19 +147,21 @@ yargs(hideBin(process.argv))
     `release-issues`,
     "see release issues",
     (argv) => {
-      addPnaOption(argv);
-      addRnaOption(argv);
+      Config.addPnaOption(argv);
+      Config.addRnaOption(argv);
+      Config.addDetailsOption(argv);
     },
     (args) => {
       const config = new Config(args);
       const gitlabService = config.createService();
       const projectName = config.getPna();
       const releaseName = config.getRna();
+      const dumpSimple = config.dumpDetails();
       const issues$ = gitlabService.getReleaseIssues(projectName, releaseName);
       issues$.subscribe({
         next: (issues) => {
           issues.forEach((i) =>
-            config.logger.printItem(i.toString())
+            config.logger.printItem(i.toString(dumpSimple))
           )
         },
         error: (err) => config.logger.exit(err)
@@ -215,8 +173,8 @@ yargs(hideBin(process.argv))
     `milestones`,
     "see project milestones",
     (argv) => {
-      addPnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
       argv.option({
         "only-active": {
           default: false,
@@ -244,8 +202,8 @@ yargs(hideBin(process.argv))
     `releases`,
     "see project releases",
     (argv) => {
-      addPnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
     },
     (args) => {
       const config = new Config(args);
@@ -272,9 +230,9 @@ yargs(hideBin(process.argv))
     `release`,
     "see project release details",
     (argv) => {
-      addPnaOption(argv);
-      addRnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addRnaOption(argv);
+      Config.addQuantityOption(argv);
     },
     (args) => {
       const config = new Config(args);
@@ -301,8 +259,8 @@ yargs(hideBin(process.argv))
     `pipelines`,
     "see project pipelines",
     (argv) => {
-      addPnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
     },
     (args) => {
       const config = new Config(args);
@@ -323,8 +281,8 @@ yargs(hideBin(process.argv))
     `tags`,
     "see project tags",
     (argv) => {
-      addPnaOption(argv);
-      addQuantityOption(argv);
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
     },
     (args) => {
       const config = new Config(args);
