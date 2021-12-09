@@ -1,6 +1,9 @@
 
 # For End-Users
 
+This section is for people who just want to install the program. 
+If you want more information, check developers issues at the DEV section below.
+
 ## Install with SNAP (mostly for Linux users)
 
 The first easiest option is SNAP, 
@@ -32,6 +35,9 @@ $ gitlab-cli --token XXXXX --url https://gitlab.mycompany.com projects
 
 ```
 
+**Tip**: The personel token can set previosly inside Gitlab (see: https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html for details)
+
+
 ## Configuration (Optional)
 
 You can create the file `.gitlab-cli` (in the current directory) or a
@@ -54,7 +60,7 @@ $ gitlab-cli --auto-token --auto-url projects --n 2
  - [id:2] : projectB - group2/projectB
 ```
 
-*Tip*: Do not grant read access for this file (`.gitlab-cli`) to other users...
+**Tip**: Do not grant read access for this file (`.gitlab-cli`) to other users...
 
 # For Developers
 
@@ -66,12 +72,26 @@ $ npm i
 $ npx tsc && node build/main.js --help
 ```
 
-
 ## Examples (DEV mode)
 ```
 $ npx tsc && node build/main.js --help
 $ npx tsc && node build/main.js --token XXXXX --url https://git.tecgraf.puc-rio.br opened-issues --verbose --project-name my-project
 $ npx tsc && node build/main.js release-notes --token XXXXX --url https://git.tecgraf.puc-rio.br --project-name my-project --verbose --milestone-name my-milestone
+```
+
+## Tag (version) Generation
+
+See `package.json` scripts for details.
+
+
+### Normal stable version
+```
+$ npm run release
+```
+
+### Beta release
+```
+$ npm run release-beta
 ```
 
 ## Snap Publish
@@ -80,4 +100,10 @@ $ snapcraft login
 $ snapcraft upload gitlab-cli_<version>_<arch>.snap
 $ snapcraft status gitlab-cli
 $ snapcraft list-revisions gitlab-cli
+```
+
+## NPM Publish
+```
+$ npm login
+$ npm publish --access public
 ```
