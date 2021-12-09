@@ -15,7 +15,7 @@ $ sudo snap refresh gitlab-cli --edge --devmode
 
 ## Install with NPM (once you have NodeJs installed)
 If you have NodeJs (https://nodejs.org) installed, 
-a good option is NPM. Try the `npm` install command to install or to update the program.
+a good option is NPM. Try the `npm` command to install or to update the program.
 ```
 $ npm i -g @andreclinio/gitlab-cli
 ```
