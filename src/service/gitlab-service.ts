@@ -27,7 +27,7 @@ export class GitlabService {
 
   public getProjects(quantity?: number, search?: string): Observable<Project[]> {
     const card = quantity ? quantity : 100;
-    let path = `/projects?per_page=${card}&order_by=name&sort=asc&membership=true`;
+    let path = `/projects?pagination=keyset&per_page=${card}&order_by=id&sort=asc&membership=true`;
     if (search) path += `&search=${search}`;
     const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe(
       map((ax) => ax.data)
@@ -35,7 +35,8 @@ export class GitlabService {
     const projects$ = jsonProjects$.pipe(
       map((jps) => jps.map((jp) => new Project(jp)))
     );
-    return projects$;
+    const sorted$ = projects$.pipe( map(ps => ps.sort( (p1, p2) => p1.name.localeCompare(p2.name))));
+    return sorted$;
   }
 
   public getAllIssues(projectName: string, quantity?: number): Observable<Issue[]> {
