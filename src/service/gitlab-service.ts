@@ -27,7 +27,7 @@ export class GitlabService {
 
   public getProjects(quantity?: number, search?: string): Observable<Project[]> {
     const card = quantity ? quantity : 100;
-    let path = `/projects?pagination=keyset&per_page=${card}&order_by=id&sort=asc&membership=true`;
+    let path = `/projects?pagination=keyset&per_page=${card}&order_by=id&sort=desc&membership=true`;
     if (search) path += `&search=${search}`;
     const jsonProjects$ = from(this.mountGetRequest<JsonProject[]>(path)).pipe(
       map((ax) => ax.data)
