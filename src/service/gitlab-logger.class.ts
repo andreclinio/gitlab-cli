@@ -1,4 +1,5 @@
 
+export type GitlabLoggerUrlType = 'put' | 'get'
 export interface GitlabLogger {
-    logUrl(text: string) : void
+    logUrl(type: GitlabLoggerUrlType, text: string) : void
 }

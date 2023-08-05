@@ -1,5 +1,5 @@
 import { Moment } from "moment";
-import { GitlabLogger } from "./service/gitlab-logger.class";
+import { GitlabLogger, GitlabLoggerUrlType } from "./service/gitlab-logger.class";
 
 export class Logger implements GitlabLogger {
 
@@ -23,8 +23,12 @@ export class Logger implements GitlabLogger {
     this.toConsole(`[LOG]: ${text}`);
   }
 
-  logUrl(url: string): void {
-    this.log(`URL -> ${Logger.toCyan(url)}`);
+  debug(text: string): void {
+    this.toConsole(`[${Logger.toMagenta("DEBUG")}]: ${text}`);
+  }
+
+  logUrl(type: GitlabLoggerUrlType, url: string): void {
+    this.log(`URL -> ${Logger.toMagenta(type)} ${Logger.toCyan(url)}`);
   }
 
   exit(text: string) {

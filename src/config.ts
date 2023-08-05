@@ -245,6 +245,7 @@ export class Config {
     else {
       url = this._args[Config.URL_TAG] as string;
     }
+    this._logger.debug(`url: ${url}`);
     if (!url) {
       this._logger.exit("URL not found!");
     }

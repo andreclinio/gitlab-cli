@@ -170,6 +170,39 @@ yargs(hideBin(process.argv))
   )
 
   .command(
+    `label-issues`,
+    "see issues with label",
+    (argv) => {
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
+      argv.option({
+        "label": {
+          default: false,
+          demandOption: true,
+          type: "string",
+          description: "Label name",
+        },
+      });
+    },
+    (args) => {
+      const config = new Config(args);
+      const gitlabService = config.createService();
+      const projectName = config.getPna();
+      const labelName = config.getExtraStringValue("label");
+      const quantity = config.getQuantity();
+      const issues$ = gitlabService.getIssuesWithLabel(projectName, labelName, quantity);
+      issues$.subscribe({
+        next: (issues) => {
+          issues.forEach((i) =>
+            config.logger.printItem(i.toString(true))
+          )
+        },
+        error: (err) => config.logger.exit(err)
+      });
+    }
+  )
+
+  .command(
     `milestones`,
     "see project milestones",
     (argv) => {
@@ -193,6 +226,68 @@ yargs(hideBin(process.argv))
       const milestones$ = gitlabService.getMilestones(projectId, onlyActive, quantity);
       milestones$.subscribe({
         next: (milestones) => milestones.forEach((m) => config.logger.printItem(m.toString())),
+        error: (err) => config.logger.exit(err)
+      });
+    }
+  )
+
+  .command(
+    `labels`,
+    "see project labels",
+    (argv) => {
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
+    },
+    (args) => {
+      const config = new Config(args);
+      const gitlabService = config.createService();
+      const projectId = config.getPna();
+      const quantity = config.getQuantity();
+      const labels$ = gitlabService.getLabels(projectId, quantity);
+      labels$.subscribe({
+        next: (labels) => labels.forEach((m) => config.logger.printItem(m.toString())),
+        error: (err) => config.logger.exit(err)
+      });
+    }
+  )
+
+  .command(
+    `swap-labels`,
+    "change project issues labels",
+    (argv) => {
+      Config.addPnaOption(argv);
+      Config.addQuantityOption(argv);
+      argv.option({
+        "from": {
+          default: false,
+          demandOption: true,
+          type: "string",
+          description: "Source label name",
+        },
+      });
+      argv.option({
+        "to": {
+          default: false,
+          demandOption: true,
+          type: "string",
+          description: "Target label name",
+        },
+      });
+    },
+    (args) => {
+      const config = new Config(args);
+      const gitlabService = config.createService();
+      const projectName = config.getPna();
+      const quantity = config.getQuantity();
+      const fromLabel = config.getExtraStringValue("from");
+      const toLabel = config.getExtraStringValue("to");
+      const issues$ = gitlabService.getIssuesWithLabel(projectName, fromLabel, quantity);
+      issues$.subscribe({
+        next: (is) => is.forEach((i) => {
+          config.logger.printItem(i.toString(false));
+          const mod$ = gitlabService.swapIssueLabel(projectName, i, fromLabel, toLabel);
+          mod$.subscribe( m => config.logger.log( m ? "ok" : "not ok"));
+        }),
         error: (err) => config.logger.exit(err)
       });
     }

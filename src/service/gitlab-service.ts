@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { forkJoin, from, map, mergeAll, mergeMap, Observable, of, throwError } from "rxjs";
 
 import { Logger } from "../logger";
-import { JsonIssue, JsonMilestone, JsonPipeline, JsonProject, JsonRelease, JsonTag } from "./json-data";
+import { JsonIssue, JsonLabel, JsonMilestone, JsonPipeline, JsonProject, JsonRelease, JsonTag } from "./json-data";
 import { Project } from "./logic/Project.class";
 import { Issue, IssueState } from "./logic/Issue.class";
 import { Milestone } from "./logic/Milestone.class";
@@ -11,6 +11,7 @@ import { Pipeline } from "./logic/Pipeline.class";
 import { Release } from "./logic/Release.class";
 import { Tag } from "./logic/Tag.class";
 import { GitlabLogger } from "./gitlab-logger.class";
+import { Label } from "./logic/Label.class";
 
 
 export class GitlabService {
@@ -57,6 +58,14 @@ export class GitlabService {
       mergeMap((p) => this._getMilestones(p.id, onlyActive, quantity))
     );
     return milestones$;
+  }
+
+  public getLabels(projectName: string, quantity?: number): Observable<Label[]> {
+    const project$ = this._getProjectByName(projectName);
+    const labels$ = project$.pipe(
+      mergeMap((p) => this._getLabels(p.id, quantity))
+    );
+    return labels$;
   }
 
   public getReleaseByNames(projectName: string, releaseName: string): Observable<Release> {
@@ -120,6 +129,34 @@ export class GitlabService {
     return tags$;
   }
 
+  public getIssuesWithLabel(projectName: string, label: string, quantity?: number): Observable<Issue[]>{
+    const project$ = this._getProjectByName(projectName);
+    const issues$ = project$.pipe( mergeMap( p => this._getAllIssuesWithLabel(p.id, label, quantity)));
+    return issues$;
+  }
+
+  public swapIssueLabel(projectName: string, issue: Issue, fromLabel: string, toLabel: string): Observable<boolean>{
+    const projectId$ = this._getProjectByName(projectName).pipe( map( p => p ? p.id : undefined));
+    const remove$ = projectId$.pipe( mergeMap( p => p ? this._removeIssueLabel(p, issue, fromLabel) : of(false)));
+    const add$ = projectId$.pipe( mergeMap( p => p ? this._addIssueLabel(p, issue, toLabel) : of(false)));
+    const mod$ = remove$.pipe( mergeMap( r => r ? add$ : of(false) ));
+    return mod$;
+  }
+
+  private _removeIssueLabel(projectId: number, issue: Issue, labelName: string) : Observable<boolean> {
+    const path = `/projects/${projectId}/issues/${issue.iid}?remove_labels=${labelName}`;
+    const req$ = from(this.mountPutRequest(path));
+    const ob$ = req$.pipe(map(r => true));
+    return ob$
+  }
+
+  private _addIssueLabel(projectId: number, issue: Issue, labelName: string) : Observable<boolean> {
+    const path = `/projects/${projectId}/issues/${issue.iid}?add_labels=${labelName}`;
+    const req$ = from(this.mountPutRequest(path));
+    const ob$ = req$.pipe(map(r => true));
+    return ob$
+  }
+
   private _getMilestones(projectId: number, onlyActive: boolean, quantity?: number): Observable<Milestone[]> {
     const card = quantity ? quantity : 100;
     const path = `/projects/${projectId}/milestones?per_page=${card}`;
@@ -129,6 +166,14 @@ export class GitlabService {
       ? milestones$.pipe(map((ms) => ms.filter((m) => m.state === "active")))
       : milestones$;
     return results$.pipe(map((ms) => ms.sort((m1, m2) => m2.id - m1.id)));
+  }
+
+  private _getLabels(projectId: number, quantity?: number): Observable<Label[]> {
+    const card = quantity ? quantity : 100;
+    const path = `/projects/${projectId}/labels?per_page=${card}`;
+    const jsonLabels$ = from(this.mountGetRequest<JsonLabel[]>(path)).pipe(map((ax) => ax.data));
+    const labels$ = jsonLabels$.pipe(map((jms) => jms.map((jm) => new Label(jm))));
+    return labels$;
   }
 
   private _getMilestone(projectId: number, milestoneId: number): Observable<Milestone> {
@@ -209,15 +254,20 @@ export class GitlabService {
     const path = `/projects/${projectId}/issues?per_page=${card}&state=${state.toString()}&order_by=created_at`;
     const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
     const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
-    const filtered$ = issues$.pipe(map((issues) => issues.filter((i) => i.state === state)));
-    const results$ = state ? filtered$ : issues$;
-    return results$;
-
+    return issues$;
   }
 
   private _getAllIssues(projectId: number, quantity?: number): Observable<Issue[]> {
     const card = quantity ? quantity : 100;
     const path = `/projects/${projectId}/issues?per_page=${card}&order_by=created_at`;
+    const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
+    const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
+    return issues$;
+  }
+
+  private _getAllIssuesWithLabel(projectId: number, labelName: string, quantity?: number): Observable<Issue[]> {
+    const card = quantity ? quantity : 100;
+    const path = `/projects/${projectId}/issues?per_page=${card}&labels=${labelName}`;
     const jsonIssues$ = from(this.mountGetRequest<JsonIssue[]>(path)).pipe(map((ax) => ax.data));
     const issues$ = jsonIssues$.pipe(map((jis) => jis.map((ji) => new Issue(ji))));
     return issues$;
@@ -238,9 +288,15 @@ export class GitlabService {
   }
 
   private mountGetRequest<T>(path: string): Promise<AxiosResponse<T, any>> {
-    const auth = `Bearer ${this.token}`;
     const pth = this.mountUrl(path);
-    this.logger.logUrl(pth);
-    return this.instance.get<T>(pth, { headers: { Authorization: auth } });
+    this.logger.logUrl('get', pth);
+    return this.instance.get<T>(pth, { headers: { "PRIVATE-TOKEN": this.token } });
   }
+
+  private mountPutRequest(path: string): Promise<AxiosResponse<any, any>> {
+    const pth = this.mountUrl(path);
+    this.logger.logUrl('put', pth);
+    return this.instance.put(pth, undefined, { headers: { "PRIVATE-TOKEN": this.token } });
+  }
+
 }

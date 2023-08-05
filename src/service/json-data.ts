@@ -27,6 +27,14 @@ export interface JsonMilestone {
   due_date: string;
 }
 
+export interface JsonLabel {
+  id: number;
+  name: string;
+  description: string;
+  priority: number;
+  is_project_label: boolean;
+}
+
 export interface JsonProject {
   id: number;
   name: string;
