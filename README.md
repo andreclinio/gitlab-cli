@@ -40,8 +40,8 @@ $ gitlab-cli --token XXXXX --url https://gitlab.mycompany.com projects
 
 ## Configuration (Optional)
 
-You can create the file `.gitlab-cli` (in the current directory) or a
-`$HOME/.gitlab-cli` (in your home directory) to store the GitLab URL and your personel token. 
+You can create the file `gitlab-cli.cfg` (in the current directory) or a
+`$HOME/gitlab-cli.cfg` (in your home directory) to store the GitLab URL and your personel token. 
 Once configured this way, you can use the options 
 `--auto-token` and/or `--auto-url` avoid exposing sensitive data in command line.
 
@@ -60,7 +60,7 @@ $ gitlab-cli --auto-token --auto-url projects --n 2
  - [id:2] : projectB - group2/projectB
 ```
 
-**Tip**: Do not grant read access for this file (`.gitlab-cli`) to other users...
+**Tip**: Do not grant read access for this file (`gitlab-cli.cfg`) to other users...
 
 # For Developers
 

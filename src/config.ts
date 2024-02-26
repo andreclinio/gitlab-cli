@@ -31,7 +31,7 @@ export class Config {
 
   public static readonly QUANTITY_TAG = "quantity";
 
-  public static CONFIG_FILE_NAME = ".gitlab-cli";
+  public static CONFIG_FILE_NAME = "gitlab-cli.cfg";
 
   constructor(args: Arguments) {
     this._logger = new Logger(args.verbose as boolean);
