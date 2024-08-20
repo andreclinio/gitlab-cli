@@ -1,6 +1,6 @@
-import { Logger } from "../../logger";
-import { JsonReleaseAssetLink } from "../json-data";
-import { Holder } from "./Holder.class";
+import { Logger } from '../../logger';
+import { JsonReleaseAssetLink } from '../json-data';
+import { Holder } from './Holder.class';
 
 export class ReleaseAssetLink extends Holder<JsonReleaseAssetLink> {
     constructor(link: JsonReleaseAssetLink) {
@@ -29,5 +29,4 @@ export class ReleaseAssetLink extends Holder<JsonReleaseAssetLink> {
     toString(): string {
         return `link: ${this.name} - ${Logger.toCyan(this.url)}`;
     }
-
 }

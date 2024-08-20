@@ -1,9 +1,8 @@
-import { JsonReleaseAssets } from "../json-data";
-import { Holder } from "./Holder.class";
-import { ReleaseAssetLink } from "./ReleaseAssetLink.class";
+import { JsonReleaseAssets } from '../json-data';
+import { Holder } from './Holder.class';
+import { ReleaseAssetLink } from './ReleaseAssetLink.class';
 
 export class ReleaseAsset extends Holder<JsonReleaseAssets> {
-
     constructor(assets: JsonReleaseAssets) {
         super(assets);
     }
