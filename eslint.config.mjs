@@ -28,9 +28,15 @@ export default [
       curly: ["error", "multi"],
       "prettier/prettier": "error",
       "no-console": "warn",
+      "no-var": "error",
+      "no-unneeded-ternary" : "error",
       "no-debugger": "error",
       "no-nested-ternary": "error",
       "consistent-return": "error",
+      "no-useless-assignment": "error",
+      "no-unmodified-loop-condition": "error",
+      "no-template-curly-in-string": "error",
+      "no-constructor-return": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
