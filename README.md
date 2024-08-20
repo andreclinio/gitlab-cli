@@ -48,7 +48,7 @@ $ gitlab-cli --token XXXXX --url https://gitlab.mycompany.com projects
 You can create the file `gitlab-cli.cfg` (in the current directory) or a
 `$HOME/gitlab-cli.cfg` (in your home directory) to store the GitLab URL and your personel token.
 Once configured this way, you can use the options
-`--auto-token` and/or `--auto-url` (or just simply `--auto-all`) avoid exposing sensitive data in command line.
+`--auto-token` and/or `--auto-url` (or just simply `--auto-all`) to avoid exposing sensitive data in command line.
 
 The file should follow the JSON syntax:
 
@@ -72,7 +72,7 @@ $ gitlab-cli --auto-all issues -n 10 --pna projectA --opened
 
 ```
 
-**Tip**: Do not grant read access for this file (`gitlab-cli.cfg`) to other users...
+**Tip**: Do not grant read access for file (`gitlab-cli.cfg`) to other users...
 
 # For Developers
 
@@ -128,9 +128,16 @@ rm -fr *.snap
 ## NPM Publish
 
 The `npm login` command below is needed only at first time.
+First, move to a valid tag (`git checkout`) and perform the folloeing commands:
 
 ```bash
 npm login
 npm publish --access public
 npm publish --tag beta --access public
+```
+
+Installing a beta version:
+
+```bash
+npm i @andreclinio/gitlab-cli@0.5.1-beta.1 --global
 ```
