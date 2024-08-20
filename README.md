@@ -62,9 +62,14 @@ The file should follow the JSON syntax:
 Example:
 
 ``` bash
-$ gitlab-cli --auto-token --auto-url projects --n 2
- - [id:1] : projectA - group1/projectA
- - [id:2] : projectB - group2/projectB
+$ gitlab-cli --auto-token --auto-url projects -n 2
+- [id:1] : projectA - group1/projectA
+- [id:2] : projectB - group2/projectB
+
+$ gitlab-cli --auto-all issues -n 10 --pna projectA --opened
+- [issue-1231] Yada yada
+- [issue-1232] Yada yada yada
+
 ```
 
 **Tip**: Do not grant read access for this file (`gitlab-cli.cfg`) to other users...
