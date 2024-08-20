@@ -132,4 +132,5 @@ The `npm login` command below is needed only at first time.
 ```bash
 npm login
 npm publish --access public
+npm publish --tag beta --access public
 ```
