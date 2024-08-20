@@ -13,7 +13,7 @@ Logger.presentation();
 yargs(hideBin(process.argv))
   .scriptName("gitlab-cli")
   .usage(
-    `$0 <command> (--${Config.TOKEN_TAG} <token> || --${Config.AUTO_TOKEN_TAG}) (--${Config.URL_TAG} <url> || --${Config.AUTO_URL_TAG}) [arguments]`
+    `$0 <command> (--${Config.TOKEN_TAG} <token> || --${Config.AUTO_TOKEN_TAG}) (--${Config.URL_TAG} <url> || --${Config.AUTO_URL_TAG})  (--${Config.URL_TAG} <url> || --${Config.AUTO_ALL})[arguments]`
   )
   .options({
     verbose: {
@@ -27,16 +27,25 @@ yargs(hideBin(process.argv))
       type: "string",
       description: "Set personel access token",
     },
-    url: { demandOption: false, type: "string", description: "Set GitLab URL" },
+    url: { 
+      demandOption: false, 
+      type: "string", 
+      description: "Set GitLab URL" 
+    },
+    "auto-all": {
+      demandOption: false,
+      type: "boolean",
+      description: `Use access token and URL from file ${Config.CONFIG_FILE_NAME} at $HOME or current directory`,
+    },
     "auto-token": {
       demandOption: false,
       type: "boolean",
-      description: `Use access token from file ${Config.CONFIG_FILE_NAME} at $HOME`,
+      description: `Use access token from file ${Config.CONFIG_FILE_NAME} at $HOME or current directory`,
     },
     "auto-url": {
       demandOption: false,
       type: "boolean",
-      description: `Use URL from file ${Config.CONFIG_FILE_NAME} at $HOME`,
+      description: `Use URL from file ${Config.CONFIG_FILE_NAME} at $HOME or current directory`,
     },
   })
 

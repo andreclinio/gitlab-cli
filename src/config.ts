@@ -22,6 +22,7 @@ export class Config {
   public static readonly URL_TAG = "url";
   public static readonly AUTO_TOKEN_TAG = "auto-token";
   public static readonly AUTO_URL_TAG = "auto-url";
+  public static readonly AUTO_ALL = "auto-all";
 
   public static readonly RNA_TAG = "release-name";
   public static readonly TNA_TAG = "tag-name";
@@ -211,10 +212,11 @@ export class Config {
 
   private _getToken(): string {
     const autoToken = this.getExtraBooleanValue(Config.AUTO_TOKEN_TAG);
+    const autoAll = this.getExtraBooleanValue(Config.AUTO_ALL);
     let token: string;
-    if (autoToken) {
+    if (autoToken || autoAll) {
       if (!this._data || !this._data.token) {
-        this._logger.exit(`No token defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-token!`);
+        this._logger.exit(`No token defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-token or auto-all!`);
       }
       token = this._data!.token;
     }
@@ -235,10 +237,11 @@ export class Config {
 
   private _getUrl(): string {
     const autoUrl = this.getExtraBooleanValue(Config.AUTO_URL_TAG);
+    const autoAll = this.getExtraBooleanValue(Config.AUTO_ALL);
     let url: string;
-    if (autoUrl) {
+    if (autoUrl || autoAll) {
       if (!this._data || !this._data.url) {
-        this._logger.exit(`No url defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-url!`);
+        this._logger.exit(`No url defined inside $HOME/${Config.CONFIG_FILE_NAME} file for auto-url or auto-all!`);
       }
       url = this._data!.url;
     }
