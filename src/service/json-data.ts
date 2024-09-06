@@ -6,12 +6,12 @@ export interface JsonIssue {
     due_date: string;
     closed_at: string;
     labels: string[];
-    assignees: JsonIssueAssignee[];
+    assignees: JsonUser[];
     web_url: string;
     milestone: JsonMilestone;
 }
 
-export interface JsonIssueAssignee {
+export interface JsonUser {
     id: number;
     name: string;
     username: string;
@@ -25,6 +25,21 @@ export interface JsonMilestone {
     state: string;
     start_date: string;
     due_date: string;
+}
+
+export interface JsonMergeRequest {
+    id: number;
+    iid: number;
+    title: string;
+    description: string;
+    state: string;
+    created_at: string;
+    updated_at: string;
+    merged_at: string;
+    closed_at: string;
+    author: JsonUser;
+    source_branch: string;
+    target_branch: string;
 }
 
 export interface JsonLabel {

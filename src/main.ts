@@ -266,6 +266,42 @@ yargs(hideBin(process.argv))
     )
 
     .command(
+        `merge-requests`,
+        'see project merge requests',
+        (argv) => {
+            Config.addPnaOption(argv);
+            Config.addQuantityOption(argv);
+            argv.option({
+                'only-opened': {
+                    default: false,
+                    demandOption: false,
+                    type: 'boolean',
+                    description: 'Show only opened merge requests'
+                }
+            });
+        },
+        (args) => {
+            const config = new Config(args);
+            const gitlabService = config.createService();
+            const projectId = config.getPna();
+            const quantity = config.getQuantity();
+            const onlyOpened = config.getExtraBooleanValue('only-opened');
+            const mergeRequests$ = gitlabService.getMergeRequests(
+                projectId,
+                onlyOpened,
+                quantity
+            );
+            mergeRequests$.subscribe({
+                next: (milestones) =>
+                    milestones.forEach((m) =>
+                        config.logger.printItem(m.toString())
+                    ),
+                error: (err) => config.logger.exit(err)
+            });
+        }
+    )
+
+    .command(
         `labels`,
         'see project labels',
         (argv) => {

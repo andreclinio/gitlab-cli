@@ -1,8 +1,8 @@
-import { JsonIssueAssignee } from '../json-data';
+import { JsonUser } from '../json-data';
 import { Holder } from './Holder.class';
 
-export class IssueAssignee extends Holder<JsonIssueAssignee> {
-    constructor(assignee: JsonIssueAssignee) {
+export class IssueAssignee extends Holder<JsonUser> {
+    constructor(assignee: JsonUser) {
         super(assignee);
     }
 

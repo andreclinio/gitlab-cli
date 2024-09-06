@@ -13,6 +13,7 @@ import {
 import {
     JsonIssue,
     JsonLabel,
+    JsonMergeRequest,
     JsonMilestone,
     JsonPipeline,
     JsonProject,
@@ -27,6 +28,7 @@ import { Release } from './logic/Release.class';
 import { Tag } from './logic/Tag.class';
 import { GitlabLogger } from './gitlab-logger.class';
 import { Label } from './logic/Label.class';
+import { MergeRequest } from './logic/MergeRequest.class';
 
 export class GitlabService {
     private readonly instance: AxiosInstance;
@@ -91,6 +93,18 @@ export class GitlabService {
             mergeMap((p) => this._getMilestones(p.id, onlyActive, quantity))
         );
         return milestones$;
+    }
+
+    public getMergeRequests(
+        projectName: string,
+        onlyOpened: boolean,
+        quantity?: number
+    ): Observable<MergeRequest[]> {
+        const project$ = this._getProjectByName(projectName);
+        const mergeRequests$ = project$.pipe(
+            mergeMap((p) => this._getMergeRequests(p.id, onlyOpened, quantity))
+        );
+        return mergeRequests$;
     }
 
     public getLabels(
@@ -260,6 +274,27 @@ export class GitlabService {
                   map((ms) => ms.filter((m) => m.state === 'active'))
               )
             : milestones$;
+        return results$.pipe(map((ms) => ms.sort((m1, m2) => m2.id - m1.id)));
+    }
+
+    private _getMergeRequests(
+        projectId: number,
+        onlyOpened: boolean,
+        quantity?: number
+    ): Observable<MergeRequest[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/merge_requests?per_page=${card}`;
+        const jsonMergeRequests$ = from(
+            this.mountGetRequest<JsonMergeRequest[]>(path)
+        ).pipe(map((ax) => ax.data));
+        const mergeRequests$ = jsonMergeRequests$.pipe(
+            map((jms) => jms.map((jm) => new MergeRequest(jm)))
+        );
+        const results$ = onlyOpened
+            ? mergeRequests$.pipe(
+                  map((ms) => ms.filter((m) => m.state === 'opened'))
+              )
+            : mergeRequests$;
         return results$.pipe(map((ms) => ms.sort((m1, m2) => m2.id - m1.id)));
     }
 
