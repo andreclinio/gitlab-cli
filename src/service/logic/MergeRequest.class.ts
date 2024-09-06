@@ -77,10 +77,11 @@ export class MergeRequest extends Holder<JsonMergeRequest> {
     }
 
     get directionsText(): string {
-        return `${this.source_branch} -> ${this.target_branch}`;
+        return `${this.source_branch} --> ${this.target_branch}`;
     }
 
     toString(): string {
-        return `[MergeRequest #${this.id} :: ${this.author.username}] ${this.title} -  (${this.directionsText}) - [${this.stateText}]`;
+        const id = `MergeRequest #${this.id} :: ${this.author.username}`;
+        return `[${id}] ${this.title} - (${this.directionsText}) - [${this.stateText}]`;
     }
 }
