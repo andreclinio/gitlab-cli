@@ -152,7 +152,7 @@ export class Config {
     }
 
     public getExtraBooleanValue(tag: string): boolean {
-        const value = this._args[tag] ? true : false;
+        const value = !!this._args[tag];
         this._logger.log(`${tag} (boolean): ${value}`);
         return value;
     }
