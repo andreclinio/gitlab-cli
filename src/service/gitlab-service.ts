@@ -15,6 +15,8 @@ import {
     JsonLabel,
     JsonMergeRequest,
     JsonMilestone,
+    JsonPackageInfo,
+    JsonPackageFile,
     JsonPipeline,
     JsonProject,
     JsonRelease,
@@ -29,15 +31,20 @@ import { Tag } from './logic/Tag.class';
 import { GitlabLogger } from './gitlab-logger.class';
 import { Label } from './logic/Label.class';
 import { MergeRequest } from './logic/MergeRequest.class';
+import { PackageInfo } from './logic/PackageInfo.class';
+import { PackageFile } from './logic/PackageFile.class';
+import { Package } from './logic/Package.class';
 
 export class GitlabService {
     private readonly instance: AxiosInstance;
     private readonly token: string;
     private readonly logger: GitlabLogger;
+    private readonly baseURL: string;
 
     public constructor(logger: GitlabLogger, baseURL: string, token: string) {
         this.logger = logger;
         this.token = token;
+        this.baseURL = baseURL;
         this.instance = axios.create({ baseURL });
     }
 
@@ -139,6 +146,19 @@ export class GitlabService {
             mergeMap((p) => this._getPipelines(p.id, quantity))
         );
         return pipelines$;
+    }
+
+    public getPackages(
+        projectName: string,
+        quantity?: number
+    ): Observable<Package[]> {
+        const project$ = this._getProjectByName(projectName);
+        const packages$ = project$.pipe(
+            mergeMap((p) =>
+                this._getPackages(p.path_with_namespace, p.id, quantity)
+            )
+        );
+        return packages$;
     }
 
     public getMilestoneIssues(
@@ -409,6 +429,66 @@ export class GitlabService {
             map((jps) => jps.map((jp) => new Pipeline(jp)))
         );
         return pipelines$;
+    }
+
+    private _getPackages(
+        pathWithNamespace: string,
+        projectId: number,
+        quantity?: number
+    ): Observable<Package[]> {
+        const card = quantity ? quantity : 5;
+        const infos$ = this._getPackageInfos(projectId, card);
+        return infos$.pipe(
+            mergeMap((packageInfos) => {
+                // For each package info, fetch its associated files
+                const package$s = packageInfos.map((packageInfo) =>
+                    this._getPackageFiles(
+                        pathWithNamespace,
+                        projectId,
+                        packageInfo.id
+                    ).pipe(map((pf) => new Package(packageInfo, pf)))
+                );
+
+                // Combine all packages into a single array
+                return forkJoin(package$s);
+            })
+        );
+    }
+
+    private _getPackageInfos(
+        projectId: number,
+        quantity?: number
+    ): Observable<PackageInfo[]> {
+        const card = quantity ? quantity : 100;
+        const path = `/projects/${projectId}/packages?per_page=${card}&order_by=created_at&sort=desc`;
+        const jsonPackages$ = from(
+            this.mountGetRequest<JsonPackageInfo[]>(path)
+        ).pipe(map((ax) => ax.data));
+        const packages$ = jsonPackages$.pipe(
+            map((jps) => jps.map((jp) => new PackageInfo(jp)))
+        );
+        return packages$;
+    }
+
+    private _getPackageFiles(
+        pathWithNamespace: string,
+        projectId: number,
+        packageId: number
+    ): Observable<PackageFile[]> {
+        const quantity = 50;
+        const path = `/projects/${projectId}/packages/${packageId}/package_files?per_page=${quantity}`;
+        const jsonPackagesFiles$ = from(
+            this.mountGetRequest<JsonPackageFile[]>(path)
+        ).pipe(map((ax) => ax.data));
+        const files$ = jsonPackagesFiles$.pipe(
+            map((jps) =>
+                jps.map((jp) => {
+                    const prefixUrl = `${this.baseURL}/${pathWithNamespace}`;
+                    return new PackageFile(jp, prefixUrl);
+                })
+            )
+        );
+        return files$;
     }
 
     private _getTags(projectId: number, quantity?: number): Observable<Tag[]> {

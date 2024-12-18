@@ -27,6 +27,7 @@ export class Label extends Holder<JsonLabel> {
     }
 
     toString(): string {
-        return `[label #${this.id}] ${this.name}`;
+        const priorityText = this.priority === null ? '' : `(${this.priority})`;
+        return `[label #${this.id}] ${this.name} ${priorityText}`;
     }
 }

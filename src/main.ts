@@ -472,6 +472,30 @@ yargs(hideBin(process.argv))
     )
 
     .command(
+        `packages`,
+        'see project packages',
+        (argv) => {
+            Config.addPnaOption(argv);
+            Config.addQuantityOption(argv);
+        },
+        (args) => {
+            const config = new Config(args);
+            const gitlabService = config.createService();
+            const projectName = config.getPna();
+            const quantity = config.getQuantity();
+            const packages$ = gitlabService.getPackages(projectName, quantity);
+            packages$.subscribe({
+                next: (packages) => {
+                    packages.forEach((p) =>
+                        config.logger.printItem(p.toString())
+                    );
+                },
+                error: (err) => config.logger.exit(err)
+            });
+        }
+    )
+
+    .command(
         `tags`,
         'see project tags',
         (argv) => {

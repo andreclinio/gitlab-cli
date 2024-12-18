@@ -72,6 +72,22 @@ export interface JsonPipeline {
     web_url: string;
 }
 
+export interface JsonPackageInfo {
+    id: number;
+    project_id: number;
+    name: string;
+    version: string;
+    package_type: string;
+    created_at: string;
+}
+
+export interface JsonPackageFile {
+    id: number;
+    size: number;
+    file_name: string;
+    created_at: string;
+}
+
 export interface JsonRelease {
     name: string;
     tag_name: string;
