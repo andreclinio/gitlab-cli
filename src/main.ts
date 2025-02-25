@@ -518,6 +518,7 @@ yargs(hideBin(process.argv))
 
     .conflicts('token', 'auto-token')
     .conflicts('url', 'auto-url')
+    .conflicts('project-name', 'auto-project')
     .strict()
     .help()
     .version()

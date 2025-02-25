@@ -3,7 +3,7 @@ import yargs, { Arguments } from 'yargs';
 import { GitlabService } from './service/gitlab-service';
 import { Logger } from './logger';
 import { homedir, userInfo } from 'os';
-import { sep } from 'path';
+import path, { sep } from 'path';
 
 interface Data {
     token: string;
@@ -18,6 +18,7 @@ export class Config {
     public static readonly TOKEN_TAG = 'token';
     public static readonly URL_TAG = 'url';
     public static readonly AUTO_TOKEN_TAG = 'auto-token';
+    public static readonly AUTO_PROJECT_TAG = 'auto-project';
     public static readonly AUTO_URL_TAG = 'auto-url';
     public static readonly AUTO_ALL = 'auto-all';
 
@@ -49,11 +50,16 @@ export class Config {
     }
 
     static addPnaOption(argv: yargs.Argv): yargs.Argv {
-        return argv.option(Config.PNA_TAG, {
+        argv.option(Config.PNA_TAG, {
             type: 'string',
             alias: 'pna',
-            demandOption: true,
-            description: 'Set the project name'
+            demandOption: false,
+            description: `Set the project name (if ${Config.AUTO_PROJECT_TAG} is disabled)`
+        });
+        return argv.option(Config.AUTO_PROJECT_TAG, {
+            type: 'boolean',
+            demandOption: false,
+            description: 'Set the project name by automatic mode'
         });
     }
 
@@ -118,9 +124,17 @@ export class Config {
     }
 
     public getPna(): string {
+        const autoName = this._getAutoProject();
+        if (autoName !== undefined) return autoName;
         const projectName = this._args[Config.PNA_TAG] as string;
-        this._logger.log(`project name: ${projectName}`);
-        return projectName;
+        if (projectName !== undefined) {
+            this._logger.log(`project name: ${projectName}`);
+            return projectName;
+        }
+        this.logger.exit(
+            'project name is undefined! (check auto ou explict options)'
+        );
+        return '#undefined-project';
     }
 
     public getRna(): string {
@@ -233,6 +247,24 @@ export class Config {
         } catch (_err) {
             return false;
         }
+    }
+
+    private _getAutoProject(): string | undefined {
+        const autoProject = this.getExtraBooleanValue(Config.AUTO_PROJECT_TAG);
+        const autoAll = this.getExtraBooleanValue(Config.AUTO_ALL);
+        if (!autoProject && !autoAll) {
+            this._logger.log(
+                `Project name is not defined in auto-mode. (It must be defined by [${Config.PNA_TAG}] argument)`
+            );
+            return undefined;
+        }
+
+        const currentDir = process.cwd();
+        const projectName = path.basename(currentDir);
+        this._logger.log(
+            `Project name defined by current directory: ${currentDir} -> ${Logger.toYellow(projectName)}`
+        );
+        return projectName;
     }
 
     private _getToken(): string {
