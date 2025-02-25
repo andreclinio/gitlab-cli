@@ -50,6 +50,9 @@ You can create the file `gitlab-cli.cfg` (in the current directory) or a
 Once configured this way, you can use the options
 `--auto-token` and/or `--auto-url` (or just simply `--auto-all`) to avoid exposing sensitive data in command line.
 
+> **Attention**: In previous versions, the configuration file was named `.gitlab-cli`. Now it's called `gitlab-cli.cfg`.
+> It can be located at the current directory or home directory.
+
 The file should follow the JSON syntax:
 
 ```json

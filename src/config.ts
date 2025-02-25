@@ -30,10 +30,12 @@ export class Config {
     public static readonly QUANTITY_TAG = 'quantity';
 
     public static CONFIG_FILE_NAME = 'gitlab-cli.cfg';
+    public static OLD_CONFIG_FILE_NAME = '.gitlab-cli';
 
     constructor(args: Arguments) {
         this._logger = new Logger(args.verbose as boolean);
 
+        this._warnOldConfigFilePath();
         const filePath = this._findConfigFilePath();
         if (filePath) {
             this._logger.log(`Config file: ${filePath}...`);
@@ -197,6 +199,31 @@ export class Config {
             return exists && access;
         });
         return filePath;
+    }
+
+    private _warnOldConfigFilePath(): void {
+        const userEnv = process.env.USER || userInfo().username;
+        const user = userEnv || 'no-user';
+        this._logger.log(`Checking old configuration file for: ${user}`);
+
+        const cfgFile = Config.OLD_CONFIG_FILE_NAME;
+        const tries = [
+            `${cfgFile}`,
+            `${sep}home${sep}${user}${sep}${cfgFile}`,
+            `${sep}Users${sep}${user}${sep}${cfgFile}`,
+            `${homedir()}${sep}${cfgFile}`
+        ];
+
+        tries.forEach((t) => {
+            const exists = existsSync(t);
+            if (exists) {
+                const msg =
+                    `${Logger.toYellow('WARNING')}: ` +
+                    `Found old configuration file: ${Logger.toYellow(t)}! ` +
+                    `Rename it to: ${Logger.toGreen(Config.CONFIG_FILE_NAME)}.`;
+                this._logger.log(msg);
+            }
+        });
     }
 
     private _canRead(path: string): boolean {
