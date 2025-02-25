@@ -26,12 +26,12 @@ yargs(hideBin(process.argv))
         url: {
             demandOption: false,
             type: 'string',
-            description: 'Set GitLab URL'
+            description: 'Set GitLab server URL'
         },
         'auto-all': {
             demandOption: false,
             type: 'boolean',
-            description: `Use access token and URL from file ${Config.CONFIG_FILE_NAME} at $HOME or current directory`
+            description: `Equivalent to --auto-project, --auto-token and --auto-url`
         },
         'auto-token': {
             demandOption: false,
