@@ -125,6 +125,14 @@ export class GitlabService {
         return labels$;
     }
 
+    public createIssue(projectName: string, text: string): Observable<Issue> {
+        const project$ = this._getProjectByName(projectName);
+        const labels$ = project$.pipe(
+            mergeMap((p) => this._createIssue(p.id, text))
+        );
+        return labels$;
+    }
+
     public getReleaseByNames(
         projectName: string,
         releaseName: string
@@ -331,6 +339,15 @@ export class GitlabService {
             map((jms) => jms.map((jm) => new Label(jm)))
         );
         return labels$;
+    }
+
+    private _createIssue(projectId: number, text: string): Observable<Issue> {
+        const path = `/projects/${projectId}/issues?title=${text}`;
+        const jsonIssue$ = from(this.mountPostRequest<JsonIssue>(path)).pipe(
+            map((ax) => ax.data)
+        );
+        const issue$ = jsonIssue$.pipe(map((ji) => new Issue(ji)));
+        return issue$;
     }
 
     private _getMilestone(
@@ -596,10 +613,18 @@ export class GitlabService {
         });
     }
 
-    private mountPutRequest(path: string): Promise<AxiosResponse<any, any>> {
+    private mountPutRequest<T>(path: string): Promise<AxiosResponse<T, any>> {
         const pth = this.mountUrl(path);
         this.logger.logUrl('put', pth);
-        return this.instance.put(pth, undefined, {
+        return this.instance.put<T>(pth, undefined, {
+            headers: { 'PRIVATE-TOKEN': this.token }
+        });
+    }
+
+    private mountPostRequest<T>(path: string): Promise<AxiosResponse<T, any>> {
+        const pth = this.mountUrl(path);
+        this.logger.logUrl('post', pth);
+        return this.instance.post<T>(pth, undefined, {
             headers: { 'PRIVATE-TOKEN': this.token }
         });
     }

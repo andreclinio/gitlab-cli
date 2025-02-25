@@ -42,6 +42,11 @@ yargs(hideBin(process.argv))
             demandOption: false,
             type: 'boolean',
             description: `Use URL from file ${Config.CONFIG_FILE_NAME} at $HOME or current directory`
+        },
+        'auto-project': {
+            demandOption: false,
+            type: 'boolean',
+            description: `Use project based on current directory name (basename)`
         }
     })
 
@@ -319,6 +324,26 @@ yargs(hideBin(process.argv))
                     labels.forEach((m) =>
                         config.logger.printItem(m.toString())
                     ),
+                error: (err) => config.logger.exit(err)
+            });
+        }
+    )
+
+    .command(
+        `create-issue`,
+        'create a project issue',
+        (argv) => {
+            Config.addPnaOption(argv);
+            Config.addTextOption(argv);
+        },
+        (args) => {
+            const config = new Config(args);
+            const gitlabService = config.createService();
+            const projectId = config.getPna();
+            const text = config.getText() ?? '#no-text';
+            const issue$ = gitlabService.createIssue(projectId, text);
+            issue$.subscribe({
+                next: (issue) => config.logger.printItem(issue.toString(true)),
                 error: (err) => config.logger.exit(err)
             });
         }

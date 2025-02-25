@@ -29,6 +29,7 @@ export class Config {
     public static readonly DETAILS_TAG = 'details';
 
     public static readonly QUANTITY_TAG = 'quantity';
+    public static readonly TEXT_TAG = 'text';
 
     public static CONFIG_FILE_NAME = 'gitlab-cli.cfg';
     public static OLD_CONFIG_FILE_NAME = '.gitlab-cli';
@@ -60,6 +61,15 @@ export class Config {
             type: 'boolean',
             demandOption: false,
             description: 'Set the project name by automatic mode'
+        });
+    }
+
+    static addTextOption(argv: yargs.Argv): yargs.Argv {
+        return argv.option(Config.TEXT_TAG, {
+            type: 'string',
+            alias: 't',
+            demandOption: true,
+            description: `text (string) for definition`
         });
     }
 
@@ -155,6 +165,14 @@ export class Config {
         const quantity = data as number;
         this._logger.log(`quantity: ${quantity}`);
         return quantity;
+    }
+
+    public getText(): string | undefined {
+        const data = this._args[Config.TEXT_TAG];
+        if (!data) return undefined;
+        const text = data as string;
+        this._logger.log(`text: ${text}`);
+        return text;
     }
 
     public dumpDetails(): boolean {
